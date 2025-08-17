@@ -3,11 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Atom, Lightbulb, BookOpen, Sparkles } from 'lucide-react';
 
 interface ScienceExplanationProps {
+  objectName: string;
   explanation: string;
   onTryAnother: () => void;
 }
 
-export const ScienceExplanation = ({ explanation, onTryAnother }: ScienceExplanationProps) => {
+export const ScienceExplanation = ({ objectName, explanation, onTryAnother }: ScienceExplanationProps) => {
   return (
     <Card className="w-full max-w-4xl mx-auto p-8 bg-gradient-subtle border-primary/20 shadow-science">
       <div className="space-y-6">
@@ -19,6 +20,13 @@ export const ScienceExplanation = ({ explanation, onTryAnother }: ScienceExplana
               Science Explanation
             </h2>
             <Sparkles className="w-8 h-8 text-accent animate-pulse" />
+          </div>
+          
+          {/* Object Identification */}
+          <div className="bg-primary/10 rounded-full px-6 py-3 inline-block">
+            <p className="text-primary font-semibold text-lg">
+              🔍 Identified: {objectName}
+            </p>
           </div>
           <div className="flex justify-center space-x-4">
             <Atom className="w-6 h-6 text-primary animate-float" />

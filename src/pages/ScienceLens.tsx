@@ -9,16 +9,38 @@ export default function ScienceLens() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [explanation, setExplanation] = useState<string>('');
+  const [objectName, setObjectName] = useState<string>('');
   const [showResults, setShowResults] = useState(false);
 
-  const handlePhotoUpload = async (file: File) => {
+  const handlePhotoUpload = async (file: File, question: string) => {
     setUploadedFile(file);
     setIsAnalyzing(true);
     setShowResults(false);
 
     // Simulate AI analysis (in real app, this would call an AI service)
     setTimeout(() => {
-      const mockExplanation = `🔬 Amazing discovery! This image shows fascinating scientific principles at work.
+      // Mock object identification
+      const mockObjectName = "Flowering Plant (Daisy Family)";
+      
+      const mockExplanation = question 
+        ? `🔬 Great question! Let me explain what's happening here.
+
+🌟 Your Question: "${question}"
+
+🧪 The Science Behind It:
+Based on your photo, I can see fascinating scientific principles at work! The colors, patterns, and structures visible demonstrate complex physical and chemical processes.
+
+• Light and Color: The colors you see are created when light waves of different frequencies bounce off or pass through materials. Each color corresponds to a specific wavelength of electromagnetic radiation!
+
+• Structure and Form: The shape and texture reveal information about molecular arrangements, crystalline structures, or biological adaptations that have evolved over time.
+
+• Environmental Factors: Temperature, pressure, humidity, and other environmental conditions all play a role in what you're observing.
+
+🚀 Why This Matters:
+Understanding these principles helps us appreciate the incredible complexity and beauty of our natural world. From the smallest atoms to the largest galaxies, similar scientific laws govern everything around us!
+
+💡 Want to explore more? Try uploading different photos to discover new scientific phenomena. Every image tells a unique scientific story!`
+        : `🔬 Amazing discovery! This image shows fascinating scientific principles at work.
 
 🌟 What I can see:
 The object/scene in your photo demonstrates several key scientific concepts. The colors, patterns, and structures visible here are the result of complex physical and chemical processes.
@@ -35,6 +57,7 @@ Understanding these principles helps us appreciate the incredible complexity and
 
 💡 Want to explore more? Try uploading different photos to discover new scientific phenomena. Every image tells a unique scientific story!`;
 
+      setObjectName(mockObjectName);
       setExplanation(mockExplanation);
       setIsAnalyzing(false);
       setShowResults(true);
@@ -45,6 +68,7 @@ Understanding these principles helps us appreciate the incredible complexity and
     setUploadedFile(null);
     setShowResults(false);
     setExplanation('');
+    setObjectName('');
   };
 
   return (
@@ -126,6 +150,7 @@ Understanding these principles helps us appreciate the incredible complexity and
             </div>
           ) : (
             <ScienceExplanation 
+              objectName={objectName}
               explanation={explanation}
               onTryAnother={handleTryAnother}
             />
