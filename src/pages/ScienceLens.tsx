@@ -7,7 +7,8 @@ import {
   ChevronLeft, 
   Menu,
   MessageSquare,
-  Image as ImageIcon
+  Image as ImageIcon,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -18,47 +19,38 @@ import { AchievementBadge } from '@/components/AchievementBadge';
 import { AchievementNotification } from '@/components/AchievementNotification';
 import { DiscoveryHistory } from '@/components/DiscoveryHistory';
 import { ScienceParticles } from '@/components/ScienceParticles';
+import { CreditsDisplay } from '@/components/CreditsDisplay';
+import { CelebrationAnimation } from '@/components/CelebrationAnimation';
+import { QuestionAnimation } from '@/components/QuestionAnimation';
+import { ProfilePage } from '@/components/ProfilePage';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
+import { useCredits } from '@/hooks/useCredits';
+import { useAchievements } from '@/hooks/useAchievements';
 import type { Message, Conversation, Achievement, UserProfile } from '@/types';
 
-const initialAchievements: Achievement[] = [
-  {
-    id: 'first-question',
-    title: 'Curious Mind',
-    description: 'Asked your first science question',
-    icon: '🤔',
-    unlocked: false,
-  },
-  {
-    id: 'first-photo',
-    title: 'Visual Explorer',
-    description: 'Uploaded your first photo',
-    icon: '📸',
-    unlocked: false,
-  },
-  {
-    id: 'five-questions',
-    title: 'Science Enthusiast',
-    description: 'Asked 5 science questions',
-    icon: '🔬',
-    unlocked: false,
-  },
-  {
-    id: 'daily-streak',
-    title: 'Daily Discoverer',
-    description: 'Used ScienceLens for 3 days in a row',
-    icon: '🔥',
-    unlocked: false,
-  },
-  {
-    id: 'photo-expert',
-    title: 'Photo Scientist',
-    description: 'Uploaded 10 photos for analysis',
-    icon: '📷',
-    unlocked: false,
-  },
-];
+// Categories for question classification (simplified)
+const scienceCategories = {
+  biology: ['biology', 'life', 'organism', 'cell', 'gene', 'evolution', 'plant', 'animal', 'body', 'health', 'medicine', 'brain', 'heart', 'blood', 'DNA', 'protein', 'bacteria'],
+  chemistry: ['chemistry', 'chemical', 'molecule', 'atom', 'element', 'reaction', 'compound', 'acid', 'base', 'catalyst', 'polymer', 'organic', 'inorganic', 'periodic'],
+  physics: ['physics', 'force', 'energy', 'motion', 'gravity', 'light', 'wave', 'quantum', 'relativity', 'thermodynamics', 'electricity', 'magnetism', 'nuclear'],
+  astronomy: ['astronomy', 'space', 'star', 'planet', 'galaxy', 'universe', 'solar', 'moon', 'sun', 'cosmic', 'nebula', 'black hole', 'comet', 'asteroid'],
+  'earth-science': ['earth', 'geology', 'climate', 'weather', 'ocean', 'atmosphere', 'volcano', 'earthquake', 'mineral', 'rock', 'fossil'],
+  general: []
+};
+
+const categorizeQuestion = (content: string): string => {
+  const lowerContent = content.toLowerCase();
+  
+  for (const [category, keywords] of Object.entries(scienceCategories)) {
+    if (category === 'general') continue;
+    if (keywords.some(keyword => lowerContent.includes(keyword))) {
+      return category;
+    }
+  }
+  
+  return 'general';
+};
 
 export default function ScienceLens() {
   // State management
@@ -66,20 +58,17 @@ export default function ScienceLens() {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
-  const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
+  const [currentView, setCurrentView] = useState<'chat' | 'profile'>('chat');
+  const [showQuestionAnimation, setShowQuestionAnimation] = useState(false);
+  const [celebrationAchievement, setCelebrationAchievement] = useState<Achievement | null>(null);
 
   // Persistent storage
   const [conversations, setConversations] = useLocalStorage<Conversation[]>('science-lens-conversations', []);
-  const [achievements, setAchievements] = useLocalStorage<Achievement[]>('science-lens-achievements', initialAchievements);
-  const [userProfile, setUserProfile] = useLocalStorage<UserProfile>('science-lens-profile', {
-    questionsAsked: 0,
-    photosUploaded: 0,
-    achievements: [],
-    favoriteTopics: [],
-    discoveryStreak: 0,
-  });
   const [favorites, setFavorites] = useLocalStorage<string[]>('science-lens-favorites', []);
 
+  // Custom hooks
+  const { credits, hasCredits, useCredit } = useCredits();
+  const { newAchievement, recordQuestion, dismissNewAchievement } = useAchievements();
   const { toast } = useToast();
 
   // Mock AI response generator
@@ -102,50 +91,42 @@ export default function ScienceLens() {
     return `${baseResponse}\n\n🧪 The key concepts involved are:\n• Fundamental forces and interactions\n• Molecular behavior and chemical reactions\n• Energy transfer and conservation\n• Biological processes and evolution\n\n💡 This demonstrates how scientific principles are interconnected and observable in everyday phenomena!`;
   };
 
-  // Achievement checking
-  const checkAchievements = (profile: UserProfile, hasPhoto: boolean) => {
-    const updatedAchievements = [...achievements];
-    let hasNewAchievement = false;
-
-    // Check for new achievements
-    if (profile.questionsAsked === 1 && !achievements.find(a => a.id === 'first-question')?.unlocked) {
-      const achievement = updatedAchievements.find(a => a.id === 'first-question');
-      if (achievement) {
-        achievement.unlocked = true;
-        achievement.unlockedAt = Date.now();
-        setNewAchievement(achievement);
-        hasNewAchievement = true;
-      }
+  // Handle achievement celebration
+  useEffect(() => {
+    if (newAchievement) {
+      setCelebrationAchievement(newAchievement);
     }
-
-    if (hasPhoto && profile.photosUploaded === 1 && !achievements.find(a => a.id === 'first-photo')?.unlocked) {
-      const achievement = updatedAchievements.find(a => a.id === 'first-photo');
-      if (achievement) {
-        achievement.unlocked = true;
-        achievement.unlockedAt = Date.now();
-        setNewAchievement(achievement);
-        hasNewAchievement = true;
-      }
-    }
-
-    if (profile.questionsAsked === 5 && !achievements.find(a => a.id === 'five-questions')?.unlocked) {
-      const achievement = updatedAchievements.find(a => a.id === 'five-questions');
-      if (achievement) {
-        achievement.unlocked = true;
-        achievement.unlockedAt = Date.now();
-        setNewAchievement(achievement);
-        hasNewAchievement = true;
-      }
-    }
-
-    if (hasNewAchievement) {
-      setAchievements(updatedAchievements);
-    }
-  };
+  }, [newAchievement]);
 
   // Message handling
   const handleSendMessage = async (content: string, image?: File) => {
     if (!content.trim() && !image) return;
+
+    // Check if user has credits
+    if (!hasCredits) {
+      toast({
+        title: "Out of Credits",
+        description: "You've used all your daily credits. Come back tomorrow for more!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Use a credit
+    if (!useCredit()) {
+      toast({
+        title: "Error",
+        description: "Failed to use credit. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Show question animation
+    setShowQuestionAnimation(true);
+
+    // Categorize the question
+    const category = categorizeQuestion(content);
 
     // Create or update conversation
     let conversation = currentConversation;
@@ -155,6 +136,7 @@ export default function ScienceLens() {
         title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
         messages: [],
         timestamp: Date.now(),
+        category,
       };
       setCurrentConversation(conversation);
     }
@@ -166,21 +148,14 @@ export default function ScienceLens() {
       content,
       image: image ? URL.createObjectURL(image) : undefined,
       timestamp: Date.now(),
+      category,
     };
 
     conversation.messages.push(userMessage);
     setCurrentConversation({ ...conversation });
 
-    // Update user profile
-    const updatedProfile = {
-      ...userProfile,
-      questionsAsked: userProfile.questionsAsked + 1,
-      photosUploaded: image ? userProfile.photosUploaded + 1 : userProfile.photosUploaded,
-    };
-    setUserProfile(updatedProfile);
-
-    // Check achievements
-    checkAchievements(updatedProfile, !!image);
+    // Record question for achievements
+    recordQuestion(category, content, !!image);
 
     setIsLoading(true);
 
@@ -193,6 +168,7 @@ export default function ScienceLens() {
         type: 'assistant',
         content: aiResponse,
         timestamp: Date.now(),
+        category,
       };
 
       conversation.messages.push(assistantMessage);
@@ -221,6 +197,7 @@ export default function ScienceLens() {
   const handleSelectConversation = (conversation: Conversation) => {
     setCurrentConversation(conversation);
     setActiveTab('chat');
+    setCurrentView('chat');
     setSidebarOpen(false);
   };
 
@@ -238,6 +215,65 @@ export default function ScienceLens() {
       setFavorites([...favorites, id]);
     }
   };
+
+  if (currentView === 'profile') {
+    return (
+      <div className="min-h-screen bg-background relative">
+        <ScienceParticles />
+        
+        {/* Header */}
+        <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
+          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentView('chat')}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              
+              <motion.div 
+                className="flex items-center space-x-2"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="p-2 bg-gradient-cosmic rounded-lg">
+                  <Atom className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-xl font-bold bg-gradient-cosmic bg-clip-text text-transparent">
+                  ScienceLens
+                </h1>
+              </motion.div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <CreditsDisplay compact />
+              <ThemeToggle />
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8">
+          <ProfilePage />
+        </div>
+
+        {/* Celebration Animation */}
+        <CelebrationAnimation
+          achievement={celebrationAchievement}
+          onComplete={() => {
+            setCelebrationAchievement(null);
+            dismissNewAchievement();
+          }}
+        />
+
+        {/* Question Animation */}
+        <QuestionAnimation
+          isVisible={showQuestionAnimation}
+          onComplete={() => setShowQuestionAnimation(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -270,9 +306,15 @@ export default function ScienceLens() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground hidden sm:block">
-              {userProfile.questionsAsked} questions asked
-            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCurrentView('profile')}
+              className="hidden sm:flex"
+            >
+              <User className="h-5 w-5" />
+            </Button>
+            <CreditsDisplay compact />
             <ThemeToggle />
           </div>
         </div>
@@ -289,49 +331,64 @@ export default function ScienceLens() {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="w-80 border-r bg-card p-4 overflow-y-auto lg:relative absolute inset-y-0 left-0 z-30 lg:translate-x-0"
             >
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="history" className="flex items-center space-x-2">
-                    <History className="h-4 w-4" />
-                    <span>History</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="achievements" className="flex items-center space-x-2">
-                    <Award className="h-4 w-4" />
-                    <span>Badges</span>
-                  </TabsTrigger>
-                </TabsList>
+              <div className="space-y-4">
+                {/* Credits Display */}
+                <CreditsDisplay />
 
-                <TabsContent value="history" className="mt-4 h-[calc(100%-3rem)]">
-                  <DiscoveryHistory
-                    conversations={conversations}
-                    onSelectConversation={handleSelectConversation}
-                    onDeleteConversation={handleDeleteConversation}
-                    onToggleFavorite={handleToggleFavorite}
-                    favorites={favorites}
-                  />
-                </TabsContent>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="history" className="flex items-center space-x-2">
+                      <History className="h-4 w-4" />
+                      <span>History</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="achievements" className="flex items-center space-x-2">
+                      <Award className="h-4 w-4" />
+                      <span>Badges</span>
+                    </TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="achievements" className="mt-4 h-[calc(100%-3rem)]">
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Award className="h-5 w-5" />
-                        <span>Achievements</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-3">
-                        {achievements.map((achievement) => (
-                          <AchievementBadge
-                            key={achievement.id}
-                            achievement={achievement}
-                          />
-                        ))}
+                  <TabsContent value="history" className="mt-4 h-[calc(100%-3rem)]">
+                    <DiscoveryHistory
+                      conversations={conversations}
+                      onSelectConversation={handleSelectConversation}
+                      onDeleteConversation={handleDeleteConversation}
+                      onToggleFavorite={handleToggleFavorite}
+                      favorites={favorites}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="achievements" className="mt-4 h-[calc(100%-3rem)]">
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <Button
+                          variant="outline"
+                          onClick={() => setCurrentView('profile')}
+                          className="w-full"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          View Full Profile
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+                      
+                      <Card className="h-[calc(100%-4rem)]">
+                        <CardHeader>
+                          <CardTitle className="flex items-center space-x-2">
+                            <Award className="h-5 w-5" />
+                            <span>Recent Achievements</span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-center text-sm text-muted-foreground">
+                            Start asking questions to unlock achievements!
+                            <br />
+                            Over 100 badges to collect! 🏆
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </motion.aside>
           )}
         </AnimatePresence>
@@ -436,7 +493,22 @@ export default function ScienceLens() {
       {/* Achievement Notification */}
       <AchievementNotification
         achievement={newAchievement}
-        onClose={() => setNewAchievement(null)}
+        onClose={dismissNewAchievement}
+      />
+
+      {/* Celebration Animation */}
+      <CelebrationAnimation
+        achievement={celebrationAchievement}
+        onComplete={() => {
+          setCelebrationAchievement(null);
+          dismissNewAchievement();
+        }}
+      />
+
+      {/* Question Animation */}
+      <QuestionAnimation
+        isVisible={showQuestionAnimation}
+        onComplete={() => setShowQuestionAnimation(false)}
       />
 
       {/* Overlay for mobile sidebar */}
