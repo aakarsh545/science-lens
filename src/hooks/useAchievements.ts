@@ -140,20 +140,102 @@ export function useAchievements() {
     if (uniqueCategories.length >= 5) {
       specialFlags['multi-category'] = true;
     }
-    if (uniqueCategories.length >= 8) { // Assuming we have 8+ categories
+    if (uniqueCategories.length >= 8) {
       specialFlags['all-categories'] = true;
+    }
+
+    // Achievement completionist
+    const unlockedCount = achievements.filter(a => a.unlocked).length;
+    if (unlockedCount >= 50) {
+      specialFlags['achievement-master'] = true;
     }
 
     // Content-based special flags (simplified - in real app would use NLP)
     const lowerContent = content.toLowerCase();
-    if (lowerContent.includes('ocean') || lowerContent.includes('sea') || lowerContent.includes('marine')) {
-      specialFlags['ocean'] = true;
-    }
+    
+    // Biology flags
     if (lowerContent.includes('plant') || lowerContent.includes('flower') || lowerContent.includes('tree')) {
       specialFlags['plants'] = true;
     }
     if (lowerContent.includes('animal') || lowerContent.includes('mammal') || lowerContent.includes('bird')) {
       specialFlags['animals'] = true;
+    }
+    if (lowerContent.includes('cell') || lowerContent.includes('cellular') || lowerContent.includes('mitosis')) {
+      specialFlags['cells'] = true;
+    }
+    if (lowerContent.includes('dna') || lowerContent.includes('gene') || lowerContent.includes('genetic')) {
+      specialFlags['genetics'] = true;
+    }
+    if (lowerContent.includes('evolution') || lowerContent.includes('darwin') || lowerContent.includes('natural selection')) {
+      specialFlags['evolution'] = true;
+    }
+
+    // Chemistry flags
+    if (lowerContent.includes('element') || lowerContent.includes('periodic') || lowerContent.includes('atom')) {
+      specialFlags['elements'] = true;
+    }
+    if (lowerContent.includes('reaction') || lowerContent.includes('chemical reaction') || lowerContent.includes('catalyst')) {
+      specialFlags['reactions'] = true;
+    }
+    if (lowerContent.includes('molecule') || lowerContent.includes('compound') || lowerContent.includes('bond')) {
+      specialFlags['molecules'] = true;
+    }
+    if (lowerContent.includes('acid') || lowerContent.includes('base') || lowerContent.includes('ph')) {
+      specialFlags['acid-base'] = true;
+    }
+    if (lowerContent.includes('organic') || lowerContent.includes('carbon') || lowerContent.includes('hydrocarbon')) {
+      specialFlags['organic'] = true;
+    }
+
+    // Physics flags
+    if (lowerContent.includes('motion') || lowerContent.includes('force') || lowerContent.includes('velocity')) {
+      specialFlags['motion'] = true;
+    }
+    if (lowerContent.includes('energy') || lowerContent.includes('kinetic') || lowerContent.includes('potential')) {
+      specialFlags['energy'] = true;
+    }
+    if (lowerContent.includes('quantum') || lowerContent.includes('particle') || lowerContent.includes('photon')) {
+      specialFlags['quantum'] = true;
+    }
+    if (lowerContent.includes('wave') || lowerContent.includes('sound') || lowerContent.includes('frequency')) {
+      specialFlags['waves'] = true;
+    }
+    if (lowerContent.includes('light') || lowerContent.includes('optics') || lowerContent.includes('laser')) {
+      specialFlags['light'] = true;
+    }
+
+    // Astronomy flags
+    if (lowerContent.includes('star') || lowerContent.includes('sun') || lowerContent.includes('stellar')) {
+      specialFlags['stars'] = true;
+    }
+    if (lowerContent.includes('planet') || lowerContent.includes('mars') || lowerContent.includes('jupiter')) {
+      specialFlags['planets'] = true;
+    }
+    if (lowerContent.includes('galaxy') || lowerContent.includes('milky way') || lowerContent.includes('nebula')) {
+      specialFlags['galaxies'] = true;
+    }
+    if (lowerContent.includes('space') || lowerContent.includes('astronaut') || lowerContent.includes('rocket')) {
+      specialFlags['space-exploration'] = true;
+    }
+    if (lowerContent.includes('black hole') || lowerContent.includes('singularity') || lowerContent.includes('event horizon')) {
+      specialFlags['black-holes'] = true;
+    }
+
+    // Earth Science flags
+    if (lowerContent.includes('rock') || lowerContent.includes('mineral') || lowerContent.includes('geology')) {
+      specialFlags['rocks'] = true;
+    }
+    if (lowerContent.includes('weather') || lowerContent.includes('climate') || lowerContent.includes('temperature')) {
+      specialFlags['weather'] = true;
+    }
+    if (lowerContent.includes('ocean') || lowerContent.includes('sea') || lowerContent.includes('marine')) {
+      specialFlags['oceans'] = true;
+    }
+    if (lowerContent.includes('earthquake') || lowerContent.includes('seismic') || lowerContent.includes('fault')) {
+      specialFlags['earthquakes'] = true;
+    }
+    if (lowerContent.includes('climate change') || lowerContent.includes('global warming') || lowerContent.includes('greenhouse')) {
+      specialFlags['climate'] = true;
     }
     
     const newStats = {

@@ -26,7 +26,7 @@ export interface Achievement {
   bonusCredits?: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
   requirements: {
-    type: 'questions_in_category' | 'total_questions' | 'streak_days' | 'photos_uploaded' | 'time_spent' | 'special';
+    type: 'questions_in_category' | 'total_questions' | 'streak_days' | 'photos_uploaded' | 'special';
     count?: number;
     category?: string;
     special?: string;

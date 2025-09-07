@@ -211,13 +211,17 @@ export function ProfilePage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5 xl:grid-cols-10">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="unlocked">Unlocked</TabsTrigger>
               <TabsTrigger value="biology">Biology</TabsTrigger>
               <TabsTrigger value="chemistry">Chemistry</TabsTrigger>
               <TabsTrigger value="physics">Physics</TabsTrigger>
               <TabsTrigger value="astronomy">Astronomy</TabsTrigger>
+              <TabsTrigger value="earth-science">Earth</TabsTrigger>
+              <TabsTrigger value="technology">Tech</TabsTrigger>
+              <TabsTrigger value="mathematics">Math</TabsTrigger>
+              <TabsTrigger value="milestones">Milestones</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="mt-6">
@@ -238,12 +242,22 @@ export function ProfilePage() {
               </div>
             </TabsContent>
 
-            {achievementCategories.slice(0, 4).map(category => (
+            {achievementCategories.map(category => (
               <TabsContent key={category.id} value={category.id} className="mt-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {(achievementsByCategory[category.id] || []).map(achievement => (
-                    <AchievementBadge key={achievement.id} achievement={achievement} />
-                  ))}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <span className="text-2xl">{category.icon}</span>
+                    <h3 className="text-lg font-semibold">{category.name}</h3>
+                    <div className="text-sm text-muted-foreground">
+                      {(achievementsByCategory[category.id] || []).filter(a => a.unlocked).length}/
+                      {(achievementsByCategory[category.id] || []).length}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {(achievementsByCategory[category.id] || []).map(achievement => (
+                      <AchievementBadge key={achievement.id} achievement={achievement} />
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
             ))}

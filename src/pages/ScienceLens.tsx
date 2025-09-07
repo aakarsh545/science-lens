@@ -31,11 +31,13 @@ import type { Message, Conversation, Achievement, UserProfile } from '@/types';
 
 // Categories for question classification (simplified)
 const scienceCategories = {
-  biology: ['biology', 'life', 'organism', 'cell', 'gene', 'evolution', 'plant', 'animal', 'body', 'health', 'medicine', 'brain', 'heart', 'blood', 'DNA', 'protein', 'bacteria'],
-  chemistry: ['chemistry', 'chemical', 'molecule', 'atom', 'element', 'reaction', 'compound', 'acid', 'base', 'catalyst', 'polymer', 'organic', 'inorganic', 'periodic'],
-  physics: ['physics', 'force', 'energy', 'motion', 'gravity', 'light', 'wave', 'quantum', 'relativity', 'thermodynamics', 'electricity', 'magnetism', 'nuclear'],
-  astronomy: ['astronomy', 'space', 'star', 'planet', 'galaxy', 'universe', 'solar', 'moon', 'sun', 'cosmic', 'nebula', 'black hole', 'comet', 'asteroid'],
-  'earth-science': ['earth', 'geology', 'climate', 'weather', 'ocean', 'atmosphere', 'volcano', 'earthquake', 'mineral', 'rock', 'fossil'],
+  biology: ['biology', 'life', 'organism', 'cell', 'gene', 'evolution', 'plant', 'animal', 'body', 'health', 'medicine', 'brain', 'heart', 'blood', 'DNA', 'protein', 'bacteria', 'virus', 'ecosystem', 'photosynthesis', 'mitosis', 'genetic', 'anatomy', 'physiology'],
+  chemistry: ['chemistry', 'chemical', 'molecule', 'atom', 'element', 'reaction', 'compound', 'acid', 'base', 'catalyst', 'polymer', 'organic', 'inorganic', 'periodic', 'bond', 'formula', 'solution', 'ph', 'oxidation', 'reduction', 'electrochemistry'],
+  physics: ['physics', 'force', 'energy', 'motion', 'gravity', 'light', 'wave', 'quantum', 'relativity', 'thermodynamics', 'electricity', 'magnetism', 'nuclear', 'particle', 'velocity', 'acceleration', 'momentum', 'optics', 'acoustics', 'mechanics'],
+  astronomy: ['astronomy', 'space', 'star', 'planet', 'galaxy', 'universe', 'solar', 'moon', 'sun', 'cosmic', 'nebula', 'black hole', 'comet', 'asteroid', 'orbit', 'telescope', 'constellation', 'meteor', 'spacecraft', 'astronaut'],
+  'earth-science': ['earth', 'geology', 'climate', 'weather', 'ocean', 'atmosphere', 'volcano', 'earthquake', 'mineral', 'rock', 'fossil', 'plate', 'tectonic', 'erosion', 'sediment', 'groundwater', 'hurricane', 'tornado', 'glacier'],
+  technology: ['technology', 'computer', 'artificial intelligence', 'robot', 'programming', 'software', 'hardware', 'internet', 'digital', 'electronics', 'semiconductor', 'transistor', 'algorithm', 'database', 'network', 'cybersecurity', 'blockchain'],
+  mathematics: ['mathematics', 'math', 'number', 'equation', 'formula', 'algebra', 'geometry', 'calculus', 'statistics', 'probability', 'trigonometry', 'graph', 'function', 'derivative', 'integral', 'matrix', 'vector', 'theorem', 'proof'],
   general: []
 };
 
@@ -378,10 +380,11 @@ export default function ScienceLens() {
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-center text-sm text-muted-foreground">
-                            Start asking questions to unlock achievements!
-                            <br />
-                            Over 100 badges to collect! 🏆
+                          <div className="text-center text-sm text-muted-foreground space-y-2">
+                            <p>Start asking questions to unlock achievements!</p>
+                            <p className="text-xs">🏆 100+ badges across 8 science categories</p>
+                            <p className="text-xs">💎 Earn bonus credits for unlocking achievements</p>
+                            <p className="text-xs">🔥 Build streaks and become a science master!</p>
                           </div>
                         </CardContent>
                       </Card>
