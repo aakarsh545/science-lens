@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { ScienceExplanation } from '@/components/ScienceExplanation';
 import type { Message } from '@/types';
 
 interface ChatInterfaceProps {
@@ -90,9 +91,16 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
                     className="rounded-lg mb-2 max-h-64 object-cover"
                   />
                 )}
-                <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {message.content}
-                </div>
+                {message.type === 'assistant' ? (
+                  <ScienceExplanation 
+                    content={message.content} 
+                    category={message.category || 'general'} 
+                  />
+                ) : (
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {message.content}
+                  </div>
+                )}
                 <div className="text-xs opacity-70 mt-2">
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </div>

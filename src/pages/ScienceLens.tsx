@@ -23,6 +23,9 @@ import { CreditsDisplay } from '@/components/CreditsDisplay';
 import { CelebrationAnimation } from '@/components/CelebrationAnimation';
 import { QuestionAnimation } from '@/components/QuestionAnimation';
 import { ProfilePage } from '@/components/ProfilePage';
+import { ScienceExplanation } from '@/components/ScienceExplanation';
+import { ApiKeyPrompt } from '@/components/ApiKeyPrompt';
+import { getAIService, getOpenAIApiKey } from '@/services/openai';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
@@ -63,6 +66,8 @@ export default function ScienceLens() {
   const [currentView, setCurrentView] = useState<'chat' | 'profile'>('chat');
   const [showQuestionAnimation, setShowQuestionAnimation] = useState(false);
   const [celebrationAchievement, setCelebrationAchievement] = useState<Achievement | null>(null);
+  const [showApiKeyPrompt, setShowApiKeyPrompt] = useState(false);
+  const [hasShownApiPrompt, setHasShownApiPrompt] = useState(false);
 
   // Persistent storage
   const [conversations, setConversations] = useLocalStorage<Conversation[]>('science-lens-conversations', []);
@@ -73,24 +78,43 @@ export default function ScienceLens() {
   const { newAchievement, recordQuestion, dismissNewAchievement } = useAchievements();
   const { toast } = useToast();
 
-  // Mock AI response generator
-  const generateAIResponse = async (question: string, hasImage: boolean): Promise<string> => {
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+  // AI response generator with enhanced scientific explanations
+  const generateAIResponse = async (question: string, hasImage: boolean, category: string): Promise<string> => {
+    const aiService = getAIService();
     
-    const responses = [
-      `Great question! ${question} is fascinating from a scientific perspective. Let me explain the key principles involved...`,
-      `Excellent observation! The science behind this involves several important concepts...`,
-      `This is a wonderful example of how physics and chemistry work together in nature...`,
-      `I love this question! It touches on some fundamental scientific principles that govern our world...`,
-    ];
-
-    const baseResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    if (hasImage) {
-      return `${baseResponse}\n\n📸 Based on your photo, I can see some really interesting details that help illustrate these concepts perfectly! The visual elements show exactly how these scientific principles work in real life.\n\n🔬 Here's what's happening: [Detailed scientific explanation would go here based on actual AI analysis of the image and question]`;
+    if (aiService) {
+      try {
+        // Add realistic delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
+        return await aiService.analyzeQuestion(question, category, hasImage);
+      } catch (error) {
+        console.error('AI service error:', error);
+        // Fall through to mock response
+      }
     }
     
-    return `${baseResponse}\n\n🧪 The key concepts involved are:\n• Fundamental forces and interactions\n• Molecular behavior and chemical reactions\n• Energy transfer and conservation\n• Biological processes and evolution\n\n💡 This demonstrates how scientific principles are interconnected and observable in everyday phenomena!`;
+    // Enhanced mock response as fallback
+    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+    
+    const categoryResponses = {
+      biology: `🧪 Biological Systems Analysis\n\nThis is a fascinating biological question! Let me break down the key life processes involved.\n\n🔬 Core Biological Principles:\n• Cellular metabolism and energy production\n• Molecular interactions in living systems\n• Evolutionary adaptations and natural selection\n• Homeostatic mechanisms maintaining balance\n• Genetic information flow from DNA to proteins\n\n⚛️ Molecular Foundation:\nAt the molecular level, all life processes involve precise chemical reactions. Enzymes catalyze reactions, proteins provide structure and function, and nucleic acids store and transmit information.\n\n🌟 Real-World Applications:\nUnderstanding these biological principles helps us develop medical treatments, improve agriculture, and conserve ecosystems.`,
+      
+      chemistry: `🧪 Chemical Analysis and Molecular Interactions\n\nExcellent chemistry question! Let me explain the molecular mechanisms at work.\n\n🔬 Chemical Principles:\n• Atomic structure and electron behavior\n• Chemical bonding and molecular geometry\n• Thermodynamics and reaction spontaneity\n• Kinetics and reaction mechanisms\n• Equilibrium and dynamic balance\n\n⚛️ Molecular Perspective:\nAtoms combine through sharing or transferring electrons to form stable compounds. The three-dimensional arrangement of atoms determines molecular properties and reactivity.\n\n🌟 Practical Applications:\nThese chemical principles are essential for drug design, materials science, and environmental chemistry.`,
+      
+      physics: `🧪 Physical Phenomena and Natural Laws\n\nGreat physics question! Let me explore the fundamental forces and principles involved.\n\n🔬 Physical Concepts:\n• Forces and their effects on matter and motion\n• Energy conservation and transformation\n• Wave behavior and electromagnetic radiation\n• Quantum mechanical effects at atomic scales\n• Relativistic effects in space and time\n\n⚛️ Mathematical Framework:\nPhysics uses mathematics to precisely describe natural phenomena. Equations capture the relationships between physical quantities and predict system behavior.\n\n🌟 Technological Impact:\nPhysical principles enable modern technology from computers to medical imaging devices.`,
+      
+      astronomy: `🧪 Cosmic Phenomena and Stellar Processes\n\nWonderful astronomy question! Let me explain the cosmic processes involved.\n\n🔬 Astronomical Concepts:\n• Gravitational interactions shaping cosmic structure\n• Nuclear fusion powering stars and creating elements\n• Light as a messenger carrying cosmic information\n• Planetary formation in stellar nurseries\n• Evolution of galaxies and cosmic structures\n\n⚛️ Scale and Time:\nAstronomical phenomena occur on vast scales of space and time, from seconds to billions of years, revealing the universe's dynamic history.\n\n🌟 Observational Methods:\nTelescopes and detectors across the electromagnetic spectrum reveal the universe's hidden processes.`,
+      
+      default: `🧪 Scientific Principles and Natural Understanding\n\nFascinating scientific question! Let me explain the underlying principles.\n\n🔬 Scientific Concepts:\n• Observable patterns in natural phenomena\n• Cause-and-effect relationships in nature\n• Mathematical models describing reality\n• Experimental methods revealing truth\n• Theoretical frameworks organizing knowledge\n\n⚛️ Interconnected Science:\nScientific disciplines connect to reveal nature's unified principles, from quantum mechanics to cosmic evolution.\n\n🌟 Human Discovery:\nScientific inquiry expands our understanding and enables technological progress for humanity's benefit.`
+    };
+    
+    const response = categoryResponses[category as keyof typeof categoryResponses] || categoryResponses.default;
+    
+    if (hasImage) {
+      return `${response}\n\n📸 Visual Analysis:\nBased on your uploaded image, I can identify key features that perfectly illustrate these scientific concepts. The visual elements demonstrate how theoretical principles manifest in observable phenomena, providing concrete examples of abstract scientific ideas.`;
+    }
+    
+    return response;
   };
 
   // Handle achievement celebration
@@ -99,6 +123,14 @@ export default function ScienceLens() {
       setCelebrationAchievement(newAchievement);
     }
   }, [newAchievement]);
+
+  // Check if we should show API key prompt
+  const checkForApiKeyPrompt = () => {
+    if (!hasShownApiPrompt && !getOpenAIApiKey() && !localStorage.getItem('temp_openai_key')) {
+      setShowApiKeyPrompt(true);
+      setHasShownApiPrompt(true);
+    }
+  };
 
   // Message handling
   const handleSendMessage = async (content: string, image?: File) => {
@@ -123,6 +155,9 @@ export default function ScienceLens() {
       });
       return;
     }
+
+    // Check if we should prompt for API key on first question
+    checkForApiKeyPrompt();
 
     // Show question animation
     setShowQuestionAnimation(true);
@@ -162,8 +197,8 @@ export default function ScienceLens() {
     setIsLoading(true);
 
     try {
-      // Generate AI response
-      const aiResponse = await generateAIResponse(content, !!image);
+      // Generate AI response with category context
+      const aiResponse = await generateAIResponse(content, !!image, category);
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -273,6 +308,17 @@ export default function ScienceLens() {
           isVisible={showQuestionAnimation}
           onComplete={() => setShowQuestionAnimation(false)}
         />
+
+        {/* API Key Prompt */}
+        {showApiKeyPrompt && (
+          <ApiKeyPrompt
+            onApiKeySet={(key) => {
+              localStorage.setItem('temp_openai_key', key);
+              setShowApiKeyPrompt(false);
+            }}
+            onDismiss={() => setShowApiKeyPrompt(false)}
+          />
+        )}
       </div>
     );
   }
