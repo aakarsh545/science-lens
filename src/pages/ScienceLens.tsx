@@ -134,10 +134,16 @@ export default function ScienceLens() {
 
   // Message handling
   const handleSendMessage = async (content: string, image?: File) => {
-    if (!content.trim() && !image) return;
+    console.log('handleSendMessage: Starting with content:', content.slice(0, 100));
+    
+    if (!content.trim() && !image) {
+      console.log('handleSendMessage: No content or image provided');
+      return;
+    }
 
     // Check if user has credits
     if (!hasCredits) {
+      console.log('handleSendMessage: No credits available');
       toast({
         title: "Out of Credits",
         description: "You've used all your daily credits. Come back tomorrow for more!",
@@ -148,6 +154,7 @@ export default function ScienceLens() {
 
     // Use a credit
     if (!useCredit()) {
+      console.log('handleSendMessage: Failed to use credit');
       toast({
         title: "Error",
         description: "Failed to use credit. Please try again.",
@@ -156,67 +163,83 @@ export default function ScienceLens() {
       return;
     }
 
-    // Check if we should prompt for API key on first question
-    checkForApiKeyPrompt();
+    try {
+      // Check if we should prompt for API key on first question
+      checkForApiKeyPrompt();
 
-    // Show question animation
-    setShowQuestionAnimation(true);
+      // Show question animation
+      setShowQuestionAnimation(true);
 
-    // Categorize the question
-    const category = categorizeQuestion(content);
+      // Categorize the question
+      const category = categorizeQuestion(content);
+      console.log('handleSendMessage: Question categorized as:', category);
 
-    // Create or update conversation
-    let conversation = currentConversation;
-    if (!conversation) {
-      conversation = {
-        id: Date.now().toString(),
-        title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
-        messages: [],
+      // Create or update conversation with immutable updates
+      let conversation = currentConversation;
+      if (!conversation) {
+        conversation = {
+          id: Date.now().toString(),
+          title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+          messages: [],
+          timestamp: Date.now(),
+          category,
+        };
+        console.log('handleSendMessage: Created new conversation:', conversation.id);
+      }
+
+      // Create user message
+      const userMessage: Message = {
+        id: `user_${Date.now()}`,
+        type: 'user',
+        content,
+        image: image ? URL.createObjectURL(image) : undefined,
         timestamp: Date.now(),
         category,
       };
-      setCurrentConversation(conversation);
-    }
+      console.log('handleSendMessage: Created user message:', userMessage.id);
 
-    // Create user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content,
-      image: image ? URL.createObjectURL(image) : undefined,
-      timestamp: Date.now(),
-      category,
-    };
+      // Immutable update: create new conversation with new message
+      const updatedConversation = {
+        ...conversation,
+        messages: [...conversation.messages, userMessage]
+      };
+      setCurrentConversation(updatedConversation);
+      console.log('handleSendMessage: Updated conversation with user message, total messages:', updatedConversation.messages.length);
 
-    conversation.messages.push(userMessage);
-    setCurrentConversation({ ...conversation });
+      // Record question for achievements
+      recordQuestion(category, content, !!image);
 
-    // Record question for achievements
-    recordQuestion(category, content, !!image);
+      setIsLoading(true);
 
-    setIsLoading(true);
-
-    try {
       // Generate AI response with category context
       const aiResponse = await generateAIResponse(content, !!image, category);
+      console.log('handleSendMessage: Generated AI response, length:', aiResponse.length);
       
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `assistant_${Date.now()}`,
         type: 'assistant',
         content: aiResponse,
         timestamp: Date.now(),
         category,
       };
+      console.log('handleSendMessage: Created assistant message:', assistantMessage.id);
 
-      conversation.messages.push(assistantMessage);
-      setCurrentConversation({ ...conversation });
+      // Immutable update: create new conversation with assistant message
+      const finalConversation = {
+        ...updatedConversation,
+        messages: [...updatedConversation.messages, assistantMessage]
+      };
+      setCurrentConversation(finalConversation);
+      console.log('handleSendMessage: Updated conversation with assistant message, total messages:', finalConversation.messages.length);
 
-      // Update conversations list
-      const updatedConversations = conversations.filter(c => c.id !== conversation.id);
-      updatedConversations.unshift(conversation);
+      // Update conversations list with immutable operations
+      const updatedConversations = conversations.filter(c => c.id !== finalConversation.id);
+      updatedConversations.unshift(finalConversation);
       setConversations(updatedConversations);
+      console.log('handleSendMessage: Updated conversations list, total conversations:', updatedConversations.length);
 
     } catch (error) {
+      console.error('handleSendMessage: Error occurred:', error);
       toast({
         title: "Error",
         description: "Failed to get AI response. Please try again.",
@@ -224,6 +247,7 @@ export default function ScienceLens() {
       });
     } finally {
       setIsLoading(false);
+      console.log('handleSendMessage: Completed');
     }
   };
 

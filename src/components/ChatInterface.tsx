@@ -22,6 +22,21 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  // Filter out undefined/null messages and add debug logging
+  const validMessages = messages?.filter((message) => {
+    if (!message) {
+      console.warn('ChatInterface: Found undefined/null message, filtering out');
+      return false;
+    }
+    if (!message.id || !message.type || !message.content) {
+      console.warn('ChatInterface: Found invalid message structure:', message);
+      return false;
+    }
+    return true;
+  }) || [];
+
+  console.log('ChatInterface: Rendering with messages:', validMessages.length);
+
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -71,42 +86,49 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
       {/* Messages */}
       <div className="space-y-4 min-h-[400px]">
         <AnimatePresence mode="popLayout">
-          {messages.map((message, index) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <Card className={`p-4 ${
-                message.type === 'user' 
-                  ? 'ml-auto max-w-[80%] bg-primary text-primary-foreground' 
-                  : 'mr-auto max-w-[90%]'
-              }`}>
-                {message.image && (
-                  <img 
-                    src={message.image} 
-                    alt="Uploaded content"
-                    className="rounded-lg mb-2 max-h-64 object-cover"
-                  />
-                )}
-                {message.type === 'assistant' ? (
-                  <ScienceExplanation 
-                    content={message.content} 
-                    category={message.category || 'general'} 
-                  />
-                ) : (
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {message.content}
-                  </div>
-                )}
-                <div className="text-xs opacity-70 mt-2">
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+          {validMessages.map((message, index) => {
+            try {
+              return (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <Card className={`p-4 ${
+                    message.type === 'user' 
+                      ? 'ml-auto max-w-[80%] bg-primary text-primary-foreground' 
+                      : 'mr-auto max-w-[90%]'
+                  }`}>
+                    {message.image && (
+                      <img 
+                        src={message.image} 
+                        alt="Uploaded content"
+                        className="rounded-lg mb-2 max-h-64 object-cover"
+                      />
+                    )}
+                    {message.type === 'assistant' ? (
+                      <ScienceExplanation 
+                        content={message.content} 
+                        category={message.category || 'general'} 
+                      />
+                    ) : (
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {message.content}
+                      </div>
+                    )}
+                    <div className="text-xs opacity-70 mt-2">
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            } catch (error) {
+              console.error('ChatInterface: Error rendering message:', message, error);
+              return null;
+            }
+          })}
         </AnimatePresence>
         
         {isLoading && (
@@ -183,7 +205,7 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
                 Add Photo
               </Button>
               
-              {messages.length > 0 && (
+              {validMessages.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
