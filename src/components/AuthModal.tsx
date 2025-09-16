@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseAvailable } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,6 +28,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+
+    if (!isSupabaseAvailable() || !supabase) {
+      setError('Authentication service is not available. Please check your Supabase configuration.')
+      setIsLoading(false)
+      return
+    }
 
     try {
       const { error: signUpError } = await supabase.auth.signUp({
@@ -59,6 +65,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+
+    if (!isSupabaseAvailable() || !supabase) {
+      setError('Authentication service is not available. Please check your Supabase configuration.')
+      setIsLoading(false)
+      return
+    }
 
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({

@@ -27,7 +27,7 @@ import { ScienceExplanation } from '@/components/ScienceExplanation';
 import { ApiKeyPrompt } from '@/components/ApiKeyPrompt';
 import { AuthModal } from '@/components/AuthModal';
 import { getAIService, getOpenAIApiKey } from '@/services/openai';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseAvailable } from '@/lib/supabase';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
@@ -86,21 +86,32 @@ export default function ScienceLens() {
   // Check authentication status on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+      if (!isSupabaseAvailable() || !supabase) {
+        console.log('Supabase not available - auth disabled');
+        return;
+      }
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      }
     };
     
     checkAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      if (session) {
-        setShowAuthModal(false);
-      }
-    });
+    // Listen for auth changes only if Supabase is available
+    if (isSupabaseAvailable() && supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        setIsAuthenticated(!!session);
+        if (session) {
+          setShowAuthModal(false);
+        }
+      });
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    }
   }, []);
 
   // AI response generator with enhanced scientific explanations
@@ -234,8 +245,8 @@ export default function ScienceLens() {
       // Record question for achievements
       recordQuestion(category, content, !!image);
 
-      // Show auth modal after first question if not authenticated
-      if (!hasAskedFirstQuestion && !isAuthenticated) {
+      // Show auth modal after first question if not authenticated and Supabase is available
+      if (!hasAskedFirstQuestion && !isAuthenticated && isSupabaseAvailable()) {
         setHasAskedFirstQuestion(true);
         setShowAuthModal(true);
       }
