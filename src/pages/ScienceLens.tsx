@@ -25,7 +25,9 @@ import { QuestionAnimation } from '@/components/QuestionAnimation';
 import { ProfilePage } from '@/components/ProfilePage';
 import { ScienceExplanation } from '@/components/ScienceExplanation';
 import { ApiKeyPrompt } from '@/components/ApiKeyPrompt';
+import { AuthModal } from '@/components/AuthModal';
 import { getAIService, getOpenAIApiKey } from '@/services/openai';
+import { supabase } from '@/lib/supabase';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
@@ -68,6 +70,9 @@ export default function ScienceLens() {
   const [celebrationAchievement, setCelebrationAchievement] = useState<Achievement | null>(null);
   const [showApiKeyPrompt, setShowApiKeyPrompt] = useState(false);
   const [hasShownApiPrompt, setHasShownApiPrompt] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasAskedFirstQuestion, setHasAskedFirstQuestion] = useState(false);
 
   // Persistent storage
   const [conversations, setConversations] = useLocalStorage<Conversation[]>('science-lens-conversations', []);
@@ -77,6 +82,26 @@ export default function ScienceLens() {
   const { credits, hasCredits, useCredit } = useCredits();
   const { newAchievement, recordQuestion, dismissNewAchievement } = useAchievements();
   const { toast } = useToast();
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) {
+        setShowAuthModal(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // AI response generator with enhanced scientific explanations
   const generateAIResponse = async (question: string, hasImage: boolean, category: string): Promise<string> => {
@@ -208,6 +233,12 @@ export default function ScienceLens() {
 
       // Record question for achievements
       recordQuestion(category, content, !!image);
+
+      // Show auth modal after first question if not authenticated
+      if (!hasAskedFirstQuestion && !isAuthenticated) {
+        setHasAskedFirstQuestion(true);
+        setShowAuthModal(true);
+      }
 
       setIsLoading(true);
 
@@ -562,6 +593,27 @@ export default function ScienceLens() {
           </div>
         </main>
       </div>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          toast({
+            title: "Welcome to ScienceLens!",
+            description: "Your learning journey is now being tracked.",
+          });
+        }}
+      />
+
+      {/* API Key Prompt - Only show conditionally */}
+      {showApiKeyPrompt && (
+        <ApiKeyPrompt
+          onApiKeySet={() => setShowApiKeyPrompt(false)}
+          onDismiss={() => setShowApiKeyPrompt(false)}
+        />
+      )}
 
       {/* Achievement Notification */}
       <AchievementNotification
