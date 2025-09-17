@@ -1,1 +1,10 @@
 project_id = "oyalgnheaxmlhnkkcduy"
+
+[functions.ask]
+verify_jwt = false
+
+[functions.test-openai]
+verify_jwt = false
+
+[functions.data]
+verify_jwt = false

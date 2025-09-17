@@ -26,8 +26,7 @@ import { ProfilePage } from '@/components/ProfilePage';
 import { ScienceExplanation } from '@/components/ScienceExplanation';
 import { ApiKeyPrompt } from '@/components/ApiKeyPrompt';
 import { AuthModal } from '@/components/AuthModal';
-import { getAIService, getOpenAIApiKey } from '@/services/openai';
-import { supabase, isSupabaseAvailable } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
@@ -86,11 +85,6 @@ export default function ScienceLens() {
   // Check authentication status on mount
   useEffect(() => {
     const checkAuth = async () => {
-      if (!isSupabaseAvailable() || !supabase) {
-        console.log('Supabase not available - auth disabled');
-        return;
-      }
-      
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setIsAuthenticated(!!session);
@@ -101,35 +95,45 @@ export default function ScienceLens() {
     
     checkAuth();
 
-    // Listen for auth changes only if Supabase is available
-    if (isSupabaseAvailable() && supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        setIsAuthenticated(!!session);
-        if (session) {
-          setShowAuthModal(false);
-        }
-      });
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) {
+        setShowAuthModal(false);
+      }
+    });
 
-      return () => subscription.unsubscribe();
-    }
+    return () => subscription.unsubscribe();
   }, []);
 
-  // AI response generator with enhanced scientific explanations
+  // AI response generator using Supabase Edge Function
   const generateAIResponse = async (question: string, hasImage: boolean, category: string): Promise<string> => {
-    const aiService = getAIService();
-    
-    if (aiService) {
-      try {
-        // Add realistic delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
-        return await aiService.analyzeQuestion(question, category, hasImage);
-      } catch (error) {
-        console.error('AI service error:', error);
-        // Fall through to mock response
+    try {
+      // Call the Supabase Edge Function
+      console.log('Calling /api/ask endpoint with question:', question.slice(0, 100));
+      
+      const { data, error } = await supabase.functions.invoke('ask', {
+        body: { prompt: question }
+      });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
       }
+
+      if (data?.response) {
+        console.log('Received AI response from backend');
+        return data.response;
+      } else {
+        throw new Error('No response received from AI service');
+      }
+    } catch (error) {
+      console.error('Backend AI service error:', error);
+      // Fall back to enhanced mock response
     }
     
     // Enhanced mock response as fallback
+    console.log('Using fallback mock response for category:', category);
     await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
     
     const categoryResponses = {
@@ -160,12 +164,10 @@ export default function ScienceLens() {
     }
   }, [newAchievement]);
 
-  // Check if we should show API key prompt
+  // Check if we should show API key prompt (deprecated - now handled by backend)
   const checkForApiKeyPrompt = () => {
-    if (!hasShownApiPrompt && !getOpenAIApiKey() && !localStorage.getItem('temp_openai_key')) {
-      setShowApiKeyPrompt(true);
-      setHasShownApiPrompt(true);
-    }
+    // No longer needed since API key is handled by backend
+    console.log('API key prompt check skipped - using backend');
   };
 
   // Message handling
@@ -245,8 +247,8 @@ export default function ScienceLens() {
       // Record question for achievements
       recordQuestion(category, content, !!image);
 
-      // Show auth modal after first question if not authenticated and Supabase is available
-      if (!hasAskedFirstQuestion && !isAuthenticated && isSupabaseAvailable()) {
+      // Show auth modal after first question if not authenticated
+      if (!hasAskedFirstQuestion && !isAuthenticated) {
         setHasAskedFirstQuestion(true);
         setShowAuthModal(true);
       }
