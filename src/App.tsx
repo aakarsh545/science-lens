@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import Landing from "./pages/Landing";
 import ScienceLens from "./pages/ScienceLens";
 import ApiTest from "./pages/ApiTest";
 import NotFound from "./pages/NotFound";
@@ -19,7 +20,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<ScienceLens />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/explore" element={<ScienceLens />} />
             <Route path="/api-test" element={<ApiTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

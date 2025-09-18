@@ -1,7 +1,7 @@
-import ScienceLens from './ScienceLens';
+import Landing from './Landing';
 
 const Index = () => {
-  return <ScienceLens />;
+  return <Landing />;
 };
 
 export default Index;
