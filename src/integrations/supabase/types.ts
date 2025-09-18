@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_key: Database["public"]["Enums"]["achievement_key"]
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_key: Database["public"]["Enums"]["achievement_key"]
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_key?: Database["public"]["Enums"]["achievement_key"]
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_logs: {
         Row: {
           created_at: string | null
@@ -59,6 +80,102 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_history: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          message_role: string
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_role: string
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_role?: string
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_expires_at: string | null
+          subscription_status: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usage: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          requests_today: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          requests_today?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          requests_today?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -67,7 +184,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      achievement_key:
+        | "first_steps"
+        | "curious_learner"
+        | "knowledge_seeker"
+        | "marathon_session"
+        | "science_explorer"
+        | "night_owl"
+        | "upgrade_unlocked"
+        | "pro_explorer"
+        | "pdf_master"
+        | "time_traveler"
+        | "lightning_brain"
+        | "perfectionist"
+        | "collector"
+        | "mystery_badge"
+      subscription_tier: "free" | "plus" | "pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -194,6 +326,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      achievement_key: [
+        "first_steps",
+        "curious_learner",
+        "knowledge_seeker",
+        "marathon_session",
+        "science_explorer",
+        "night_owl",
+        "upgrade_unlocked",
+        "pro_explorer",
+        "pdf_master",
+        "time_traveler",
+        "lightning_brain",
+        "perfectionist",
+        "collector",
+        "mystery_badge",
+      ],
+      subscription_tier: ["free", "plus", "pro"],
+    },
   },
 } as const
