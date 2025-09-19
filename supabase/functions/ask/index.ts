@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json();
+    const { prompt, userId } = await req.json();
     
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {
@@ -79,6 +79,7 @@ serve(async (req) => {
       .insert({
         prompt: prompt,
         response: aiResponse,
+        user_id: userId || null
       });
 
     if (logError) {
