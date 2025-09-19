@@ -41,18 +41,21 @@ export type Database = {
           id: number
           prompt: string
           response: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: number
           prompt: string
           response: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: number
           prompt?: string
           response?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -172,6 +175,30 @@ export type Database = {
           id?: string
           requests_today?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_activity: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string
+          id?: string
           user_id?: string
         }
         Relationships: []
