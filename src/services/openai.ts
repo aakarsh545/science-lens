@@ -1,3 +1,18 @@
+export async function askAI(question: string) {
+  const resp = await fetch('/api/openai/ask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body?.error || 'AI request failed');
+  }
+  const data = await resp.json();
+  return data.reply;
+}
+
+export default askAI;
 interface OpenAIResponse {
   choices: {
     message: {
