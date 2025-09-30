@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Paperclip, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,10 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ScienceExplanation } from '@/components/ScienceExplanation';
 import type { Message } from '@/types';
+import { DifficultyToggle, getDifficultyPrompt } from './DifficultyToggle';
+import VoiceMode from './VoiceMode';
+import { PDFExport } from './PDFExport';
+import InlineFeedback from './InlineFeedbackForAIResponses';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -21,6 +25,7 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [difficulty, setDifficulty] = useState<'child' | 'teen' | 'expert'>('teen');
 
   // Filter out undefined/null messages and add debug logging
   const validMessages = messages?.filter((message) => {
@@ -68,8 +73,10 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
 
   const handleSubmit = () => {
     if (!input.trim() && !selectedImage) return;
-    
-    onSendMessage(input.trim(), selectedImage || undefined);
+    // Append difficulty prompt if selected
+  const difficultyPrompt = getDifficultyPrompt(difficulty) || '';
+    const payload = difficultyPrompt ? `${difficultyPrompt}\n\n${input.trim()}` : input.trim();
+    onSendMessage(payload, selectedImage || undefined);
     setInput('');
     handleRemoveImage();
   };
@@ -83,6 +90,13 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <DifficultyToggle difficulty={difficulty} onChange={(d) => setDifficulty(d)} />
+        <div className="flex items-center space-x-2">
+          <VoiceMode onTranscribe={(text) => { setInput((s) => s + ' ' + text); }} />
+          <PDFExport messages={messages} conversationTitle="Science Lens Conversation" isProUser={true} />
+        </div>
+      </div>
       {/* Messages */}
       <div className="space-y-4 min-h-[400px]">
         <AnimatePresence mode="popLayout">
@@ -125,7 +139,8 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onClearChat 
                 </motion.div>
               );
             } catch (error) {
-              console.error('ChatInterface: Error rendering message:', message, error);
+              const errMsg = error instanceof Error ? error.message : String(error);
+              console.error('ChatInterface: Error rendering message:', message, errMsg);
               return null;
             }
           })}

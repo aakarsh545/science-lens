@@ -56,12 +56,13 @@ export const useSupabaseAchievements = () => {
       const existing = achievements.find(a => a.id === achievementId);
       if (existing?.unlocked) return false;
 
-      const { error } = await supabase
-        .from('achievements')
-        .insert({
-          user_id: session.user.id,
-          achievement_key: achievementId as any,
-        });
+      // Supabase client generates a union type for achievement_key; cast to unknown then string to satisfy typings
+      const payload = {
+        user_id: session.user.id,
+        achievement_key: achievementId as unknown as string,
+      } as unknown as Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await supabase.from('achievements').insert([payload as unknown as any]);
 
       if (error) {
         // If it's a duplicate error, that's fine
@@ -87,7 +88,8 @@ export const useSupabaseAchievements = () => {
 
       return true;
     } catch (error) {
-      console.error('Error unlocking achievement:', error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error('Error unlocking achievement:', errMsg);
       return false;
     }
   };

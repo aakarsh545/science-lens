@@ -71,3 +71,43 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Local development: API server for OpenAI
+
+This project uses Vite for the frontend. To make it easy to test the Next-style API route added in `pages/api/openai/ask.ts` while running Vite locally, there's a lightweight Express dev server that mirrors the same endpoint.
+
+Files:
+
+- `server/dev-server.js` — small Express server that exposes `POST /api/openai/ask` and proxies to OpenAI using the `OPENAI_API_KEY` env var.
+
+Scripts:
+
+Run the frontend (Vite):
+
+```bash
+npm run dev
+```
+
+Run the dev API server:
+
+```bash
+npm run dev:api
+```
+
+Run both concurrently (requires `concurrently` to be installed globally or added to devDependencies):
+
+```bash
+npm run dev:all
+```
+
+Notes:
+
+- Set `OPENAI_API_KEY` in your environment before starting the dev API server. Example:
+
+```bash
+export OPENAI_API_KEY="sk-..."
+npm run dev:api
+```
+
+- The dev server listens on port `8787` by default (override with `DEV_API_PORT`).
+- This dev server is for local development and testing only — do not use it as-is in production.

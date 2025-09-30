@@ -78,7 +78,7 @@ export default function ScienceLens() {
   const [favorites, setFavorites] = useLocalStorage<string[]>('science-lens-favorites', []);
 
   // Custom hooks
-  const { credits, hasCredits, useCredit } = useCredits();
+  const { credits, hasCredits, useCredit: consumeCredit } = useCredits();
   const { newAchievement, recordQuestion, dismissNewAchievement } = useAchievements();
   const { toast } = useToast();
 
@@ -191,7 +191,8 @@ export default function ScienceLens() {
     }
 
     // Use a credit
-    if (!useCredit()) {
+  const used = consumeCredit();
+  if (!used) {
       console.log('handleSendMessage: Failed to use credit');
       toast({
         title: "Error",

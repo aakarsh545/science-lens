@@ -18,12 +18,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface DiagramProps {
-  type: 'atom' | 'dna' | 'solar-system' | 'chemical-reaction' | 'wave' | 'cell' | 'circuit';
+  type: 'atom' | 'dna' | 'solar-system' | 'chemical-reaction' | 'wave' | 'cell' | 'circuit' | 'galaxy';
   animated?: boolean;
 }
 
-const AnimatedDiagram = ({ type, animated = true }: DiagramProps) => {
+  const AnimatedDiagram = ({ type, animated = true }: DiagramProps) => {
   const [isPlaying, setIsPlaying] = useState(animated);
+  const [step, setStep] = useState(0);
+
+  const stepForward = () => setStep((s) => s + 1);
+  const stepBack = () => setStep((s) => Math.max(0, s - 1));
 
   const AtomDiagram = () => (
     <div className="relative w-48 h-48 mx-auto">
@@ -172,6 +176,85 @@ const AnimatedDiagram = ({ type, animated = true }: DiagramProps) => {
     </div>
   );
 
+  const CellDiagram = () => (
+    <div className="relative w-48 h-48 mx-auto">
+      <svg viewBox="0 0 200 200" width="100%" height="100%">
+        <defs>
+          <radialGradient id="nuc" cx="50%" cy="50%">
+            <stop offset="0%" stopColor="#ffd6a5" />
+            <stop offset="100%" stopColor="#ffb4a2" />
+          </radialGradient>
+        </defs>
+        <motion.circle
+          cx="100"
+          cy="100"
+          r={60 + step * 2}
+          fill="url(#nuc)"
+          animate={isPlaying ? { rotate: [0, 360] } : {}}
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+        />
+        {/* organelles as circles */}
+        {[0, 1, 2, 3].map((i) => (
+          <motion.circle
+            key={i}
+            cx={40 + i * 35}
+            cy={70 + ((i % 2) * 40)}
+            r={8 + (i === step % 4 ? 4 : 0)}
+            fill={['#7dd3fc', '#f9a8d4', '#a7f3d0', '#fbcfe8'][i]}
+            initial={{ opacity: 0.8 }}
+            animate={isPlaying ? { y: [0, -6, 0] } : {}}
+            transition={{ duration: 2 + i, repeat: Infinity }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+
+  const GalaxyDiagram = () => (
+    <div className="relative w-48 h-48 mx-auto">
+      <svg viewBox="0 0 200 200" width="100%" height="100%">
+        {[...Array(6)].map((_, i) => (
+          <motion.ellipse
+            key={i}
+            cx="100"
+            cy="100"
+            rx={40 + i * 8}
+            ry={15 + i * 3}
+            stroke={i % 2 === 0 ? '#60a5fa' : '#a78bfa'}
+            strokeWidth={1}
+            fill="none"
+            animate={isPlaying ? { rotate: 360 } : {}}
+            transformOrigin="100 100"
+            transition={{ duration: 10 + i * 2, repeat: Infinity, ease: 'linear' }}
+          />
+        ))}
+        <motion.circle cx="100" cy="100" r={3 + (step % 3)} fill="#fff9c4" animate={isPlaying ? { scale: [1, 1.4, 1] } : {}} transition={{ duration: 1.5, repeat: Infinity }} />
+      </svg>
+    </div>
+  );
+
+  const CircuitDiagram = () => (
+    <div className="relative w-48 h-48 mx-auto">
+      <svg viewBox="0 0 200 200" width="100%" height="100%">
+        <motion.rect x="20" y="40" width="160" height="120" rx="8" fill="#0f172a" stroke="#22c55e" strokeWidth="1" />
+        {[...Array(5)].map((_, i) => (
+          <motion.line
+            key={i}
+            x1={30 + i * 32}
+            y1={60}
+            x2={30 + i * 32}
+            y2={140}
+            stroke="#94a3b8"
+            strokeWidth={2}
+            animate={isPlaying ? { strokeDashoffset: [0, 10, 0] } : {}}
+            transition={{ duration: 1.2 + i * 0.2, repeat: Infinity }}
+          />
+        ))}
+        <motion.circle cx="100" cy="100" r={6 + (step % 2)} fill="#22c55e" animate={isPlaying ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 1.4, repeat: Infinity }} />
+      </svg>
+    </div>
+  );
+
   const renderDiagram = () => {
     switch (type) {
       case 'atom':
@@ -182,6 +265,12 @@ const AnimatedDiagram = ({ type, animated = true }: DiagramProps) => {
         return <SolarSystemDiagram />;
       case 'wave':
         return <WaveDiagram />;
+      case 'cell':
+        return <CellDiagram />;
+      case 'galaxy':
+        return <GalaxyDiagram />;
+      case 'circuit':
+        return <CircuitDiagram />;
       default:
         return (
           <div className="w-48 h-48 mx-auto flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg">
@@ -249,8 +338,9 @@ export function ScienceExplanation({ content, category = 'general' }: ScienceExp
     let currentContent = '';
     let currentKeyPoints: string[] = [];
 
+    const emojiMarkers = ['🧪', '🔬', '⚛️', '🌟'];
     for (const line of lines) {
-      if (line.includes('🧪') || line.includes('🔬') || line.includes('⚛️') || line.includes('🌟')) {
+      if (emojiMarkers.some((e) => line.includes(e))) {
         if (currentContent) {
           parsedSections.push({
             title: currentTitle,
@@ -262,7 +352,8 @@ export function ScienceExplanation({ content, category = 'general' }: ScienceExp
           currentContent = '';
           currentKeyPoints = [];
         }
-        currentTitle = line.replace(/[🧪🔬⚛️🌟]/g, '').trim() || 'Key Concept';
+  // Remove known emoji markers using split/join for compatibility
+  currentTitle = emojiMarkers.reduce((s, e) => s.split(e).join(''), line).trim() || 'Key Concept';
       } else if (line.startsWith('•') || line.startsWith('-')) {
         currentKeyPoints.push(line.substring(1).trim());
       } else {
@@ -308,6 +399,16 @@ export function ScienceExplanation({ content, category = 'general' }: ScienceExp
     }
     if (lowerText.includes('wave') || lowerText.includes('frequency') || lowerText.includes('vibration')) {
       return { type: 'wave' };
+    }
+    // New detections
+    if (lowerText.includes('cell') || lowerText.includes('organelle') || lowerText.includes('membrane')) {
+      return { type: 'cell' };
+    }
+    if (lowerText.includes('galaxy') || lowerText.includes('star') || lowerText.includes('nebula')) {
+      return { type: 'galaxy' };
+    }
+    if (lowerText.includes('circuit') || lowerText.includes('voltage') || lowerText.includes('resistor') || lowerText.includes('current')) {
+      return { type: 'circuit' };
     }
     
     return undefined;
