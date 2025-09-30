@@ -1,5 +1,7 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
+import { getDifficultyPrompt } from '../../../src/services/openai';
+import { createClient } from '@supabase/supabase-js';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
 // NOTE: sanitize is implemented in src/utils/sanitize.ts. Import relatively.
 import { sanitize } from '../../../src/utils/sanitize';
@@ -15,9 +17,6 @@ async function tryLogToSupabase(payload: { ip?: string; questionPreview?: string
   const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseServiceRole) return;
   try {
-    // import at runtime to avoid hard dependency failures in environments without the package
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-    const { createClient } = require('@supabase/supabase-js');
     const supabase = createClient(supabaseUrl, supabaseServiceRole);
     await supabase.from('security_logs').insert([
       {
@@ -29,7 +28,8 @@ async function tryLogToSupabase(payload: { ip?: string; questionPreview?: string
   } catch (e) {
     // don't block the request on logging failures
     // eslint-disable-next-line no-console
-    console.warn('Supabase logging failed', e?.message || e);
+    const msg = e instanceof Error ? e.message : String(e);
+    console.warn('Supabase logging failed', msg);
   }
 }
 
@@ -59,23 +59,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(429).json({ error: 'Rate limit exceeded' });
   }
 
-  let question: unknown = null;
-  try {
-    question = req.body?.question;
-  } catch (e) {
-    return res.status(400).json({ error: 'Invalid request body' });
-  }
+  const body = req.body as { question?: unknown; difficulty?: unknown };
+  const question = typeof body?.question === 'string' ? body.question.trim() : '';
+  const difficulty = typeof body?.difficulty === 'string' ? body.difficulty : undefined;
 
-  if (typeof question !== 'string' || !question.trim()) {
-    return res.status(400).json({ error: 'Missing or invalid `question` string' });
-  }
-
-  // enforce max length
-  if (question.length > 4000) {
-    return res.status(400).json({ error: 'Question too long' });
-  }
+  if (!question) return res.status(400).json({ error: 'Missing or invalid `question` string' });
+  if (question.length > 4000) return res.status(400).json({ error: 'Question too long' });
 
   const cleaned = sanitize(question).slice(0, 4000);
+  let difficultyPrompt = '';
+  if (typeof difficulty === 'string' && ['child', 'teen', 'expert'].includes(difficulty)) {
+    difficultyPrompt = getDifficultyPrompt(difficulty as 'child' | 'teen' | 'expert');
+  }
+  const finalPrompt = difficultyPrompt ? `${difficultyPrompt}\n\n${cleaned}` : cleaned;
 
   // Create OpenAI client using server-side env var. Do NOT commit keys to repo.
   const apiKey = process.env.OPENAI_API_KEY;
@@ -91,23 +87,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: cleaned }],
+      messages: [
+        { role: 'system', content: 'You are Science Lens, a helpful assistant that provides clear, step-by-step scientific explanations.' },
+        { role: 'user', content: finalPrompt },
+      ],
       max_tokens: 800,
     });
+    // Safely extract chat completion text using a lightweight type assertion
+    const comp = completion as unknown as { choices?: Array<{ message?: { content?: string } }>; usage?: unknown };
+    const reply = comp?.choices?.[0]?.message?.content ?? '';
+    const usage = comp?.usage ?? null;
 
-    // Attempt to read reply from known shapes
-    const reply =
-      // OpenAI's chat response
-      (completion as any)?.choices?.[0]?.message?.content ||
-      // fallback to text
-      (completion as any)?.choices?.[0]?.text ||
-      '';
+    // Optional: attempt to write AI log to Supabase (ai_logs table)
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && supabaseServiceRole) {
+        const sb = createClient(supabaseUrl, supabaseServiceRole);
+        void sb.from('ai_logs').insert([{ prompt: finalPrompt.slice(0, 1000), response: reply.slice(0, 4000), created_at: new Date().toISOString() }]);
+      }
+    } catch (e) {
+      // non-blocking
+    }
 
-    return res.status(200).json({ reply });
-  } catch (err: any) {
+    return res.status(200).json({ reply, usage });
+  } catch (err) {
     // Log error server-side and return generic message
     // eslint-disable-next-line no-console
-    console.error('OpenAI request failed', err?.message || err);
+    console.error('OpenAI request failed', ((err as unknown) as Error)?.message || err);
     return res.status(502).json({ error: 'AI service error' });
   }
 }

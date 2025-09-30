@@ -1,24 +1,38 @@
 import React, { useState } from 'react';
-import { useMutation } from 'react-query';
-import { updateFeedback } from '../api/feedback';
+import { useToast } from '@/hooks/use-toast';
 
-const FeedbackButton = () => {
-  const [isHelpful, setIsHelpful] = useState(null);
-  const { mutate, isLoading } = useMutation(updateFeedback);
+interface InlineFeedbackProps {
+  messageId?: string;
+}
 
-  const handleFeedback = (helpful) => {
+const InlineFeedback = ({ messageId }: InlineFeedbackProps) => {
+  const [isHelpful, setIsHelpful] = useState<boolean | null>(null);
+  const { toast } = useToast();
+
+  const sendFeedback = async (helpful: boolean) => {
     setIsHelpful(helpful);
-    mutate({ helpful });
+    try {
+      // Never use SUPABASE_SERVICE_ROLE_KEY on the client. Use a safe server endpoint instead.
+      const resp = await fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageId, helpful }) });
+      if (resp.ok) {
+        toast({ title: 'Thanks for the feedback!' });
+      } else {
+        const body = await resp.json().catch(() => ({}));
+        console.error('Feedback API error', body);
+        toast({ title: 'Feedback failed', variant: 'destructive' });
+      }
+    } catch (e) {
+      console.error('Feedback send failed', ((e as unknown) as Error)?.message || e);
+      toast({ title: 'Feedback failed', variant: 'destructive' });
+    }
   };
 
   return (
-    <div>
-      <button onClick={() => handleFeedback(true)}>Helpful</button>
-      <button onClick={() => handleFeedback(false)}>Not Helpful</button>
-      {isLoading && <p>Loading...</p>}
-      {isHelpful !== null && <p>Thanks for your feedback!</p>}
+    <div className="flex items-center space-x-2 mt-2">
+      <button className={`px-2 py-1 rounded ${isHelpful === true ? 'bg-green-100' : 'bg-gray-100'}`} onClick={() => sendFeedback(true)}>Helpful</button>
+      <button className={`px-2 py-1 rounded ${isHelpful === false ? 'bg-red-100' : 'bg-gray-100'}`} onClick={() => sendFeedback(false)}>Not Helpful</button>
     </div>
   );
 };
 
-export default FeedbackButton;
+export default InlineFeedback;

@@ -1,8 +1,8 @@
 import React from 'react';
 import Lottie from 'react-lottie';
+import animationData from '../animations/spaceship.json';
 
 const AILoader = () => {
-  const animationData = require('../animations/spaceship.json');
 
   return (
     <div>

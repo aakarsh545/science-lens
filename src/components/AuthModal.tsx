@@ -54,8 +54,8 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       })
       
       onSuccess()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(((err as unknown) as Error)?.message ?? String(err));
     } finally {
       setIsLoading(false)
     }
@@ -86,8 +86,8 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       })
       
       onSuccess()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(((err as unknown) as Error)?.message ?? String(err));
     } finally {
       setIsLoading(false)
     }

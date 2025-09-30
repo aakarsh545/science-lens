@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
@@ -7,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
@@ -25,8 +26,9 @@ serve(async (req) => {
   try {
     logStep("Function started");
     
-    const { priceId } = await req.json();
-    if (!priceId) throw new Error("Price ID is required");
+  const body = (await req.json()) as Record<string, unknown>;
+  const priceId = typeof body.priceId === 'string' ? body.priceId : String(body.priceId ?? '');
+  if (!priceId) throw new Error("Price ID is required");
     logStep("Price ID received", { priceId });
 
     const authHeader = req.headers.get("Authorization")!;

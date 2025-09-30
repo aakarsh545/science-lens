@@ -12,14 +12,18 @@ export default function ApiTest() {
   const [isTestingOpenAI, setIsTestingOpenAI] = useState(false);
   const [isTestingAsk, setIsTestingAsk] = useState(false);
   const [isTestingData, setIsTestingData] = useState(false);
-  const [openAIResult, setOpenAIResult] = useState<any>(null);
-  const [askResult, setAskResult] = useState<any>(null);
-  const [dataResult, setDataResult] = useState<any>(null);
+  const [openAIResult, setOpenAIResult] = useState<Record<string, any> | null>(null);
+  const [askResult, setAskResult] = useState<Record<string, any> | null>(null);
+  const [dataResult, setDataResult] = useState<Record<string, any> | null>(null);
   const [testQuestion, setTestQuestion] = useState('Explain gravity in 5 words');
   const [articleTitle, setArticleTitle] = useState('Test Article');
   const [articleContent, setArticleContent] = useState('This is a test article content.');
   
   const { toast } = useToast();
+
+  const isResult = (v: unknown): v is { success?: boolean; response?: unknown; error?: string } => {
+    return typeof v === 'object' && v !== null;
+  };
 
   const testOpenAIEndpoint = async () => {
     setIsTestingOpenAI(true);
@@ -45,9 +49,9 @@ export default function ApiTest() {
           description: "OpenAI connection is working!",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('OpenAI test exception:', error);
-      setOpenAIResult({ error: error.message, success: false });
+  setOpenAIResult({ error: error instanceof Error ? error.message : String(error), success: false });
       toast({
         title: "Test Error",
         description: "Failed to call OpenAI test endpoint",
@@ -86,9 +90,9 @@ export default function ApiTest() {
           description: "Ask endpoint is working and logged to database!",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Ask test exception:', error);
-      setAskResult({ error: error.message, success: false });
+  setAskResult({ error: error instanceof Error ? error.message : String(error), success: false });
       toast({
         title: "Test Error",
         description: "Failed to call Ask endpoint",
@@ -146,9 +150,9 @@ export default function ApiTest() {
         description: "Data endpoint is working! Article created and fetched.",
       });
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Data test exception:', error);
-      setDataResult({ error: error.message, success: false });
+  setDataResult({ error: error instanceof Error ? error.message : String(error), success: false });
       toast({
         title: "Test Error",
         description: "Failed to call Data endpoint",
@@ -177,7 +181,7 @@ export default function ApiTest() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Test OpenAI Connection
-              {openAIResult && (
+              {isResult(openAIResult) && (
                 <Badge variant={openAIResult.success ? "default" : "destructive"}>
                   {openAIResult.success ? (
                     <><CheckCircle className="h-4 w-4 mr-1" /> Pass</>
@@ -255,14 +259,14 @@ export default function ApiTest() {
               )}
             </Button>
             
-            {askResult && (
+              {isResult(askResult) && (
               <div className="mt-4 p-4 rounded-lg bg-muted">
                 <h4 className="font-semibold mb-2">Result:</h4>
                 {askResult.success && askResult.response && (
                   <div className="mb-4">
                     <h5 className="font-medium mb-1">AI Response:</h5>
                     <div className="p-3 rounded bg-background border">
-                      {askResult.response}
+                      {String(askResult.response)}
                     </div>
                   </div>
                 )}
@@ -279,7 +283,7 @@ export default function ApiTest() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Test Data Endpoint
-              {dataResult && (
+              {isResult(dataResult) && (
                 <Badge variant={dataResult.success ? "default" : "destructive"}>
                   {dataResult.success ? (
                     <><CheckCircle className="h-4 w-4 mr-1" /> Pass</>

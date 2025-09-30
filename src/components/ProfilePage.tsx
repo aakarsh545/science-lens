@@ -8,6 +8,9 @@ import { AchievementBadge } from './AchievementBadge';
 import { CreditsDisplay } from './CreditsDisplay';
 import { useAchievements } from '@/hooks/useAchievements';
 import { achievementCategories } from '@/data/achievements';
+import DailyStreakCounter from './DailyStreakCounter';
+import { CelebrationAnimation } from './CelebrationAnimation';
+import { useState } from 'react';
 
 export function ProfilePage() {
   const { 
@@ -32,6 +35,7 @@ export function ProfilePage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      <CelebrationAnimation achievement={null} onComplete={() => {}} />
       {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

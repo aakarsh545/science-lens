@@ -39,11 +39,11 @@ export const EnhancedAuthModal: React.FC<EnhancedAuthModalProps> = ({ isOpen, on
       if (error) throw error;
       
       // The redirect will handle the success case
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+  setError(((error as unknown) as Error)?.message ?? String(error));
       toast({
         title: "Google Sign-in Error",
-        description: error.message,
+  description: ((error as unknown) as Error)?.message ?? String(error),
         variant: "destructive",
       });
     } finally {
@@ -79,11 +79,11 @@ export const EnhancedAuthModal: React.FC<EnhancedAuthModalProps> = ({ isOpen, on
       });
       
       onSuccess();
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+  setError(((error as unknown) as Error)?.message ?? String(error));
       toast({
         title: "Sign-up Error",
-        description: error.message,
+  description: ((error as unknown) as Error)?.message ?? String(error),
         variant: "destructive",
       });
     } finally {
@@ -113,11 +113,11 @@ export const EnhancedAuthModal: React.FC<EnhancedAuthModalProps> = ({ isOpen, on
       });
       
       onSuccess();
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+  setError(((error as unknown) as Error)?.message ?? String(error));
       toast({
         title: "Sign-in Error", 
-        description: error.message,
+  description: ((error as unknown) as Error)?.message ?? String(error),
         variant: "destructive",
       });
     } finally {

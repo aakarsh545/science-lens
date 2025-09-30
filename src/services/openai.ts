@@ -1,3 +1,42 @@
+import OpenAI from 'openai';
+
+export const getDifficultyPrompt = (difficulty: 'child' | 'teen' | 'expert' | undefined) => {
+  switch (difficulty) {
+    case 'child':
+      return 'Explain this in very simple terms that a 5-year-old would understand. Use fun analogies and simple words.';
+    case 'teen':
+      return 'Explain this at a high school level with clear language and examples.';
+    case 'expert':
+      return 'Provide a detailed, technical explanation suitable for an expert, include formulas and precise terminology.';
+    default:
+      return '';
+  }
+};
+
+export async function callOpenAIServerSide(question: string) {
+  // Prefer server proxy; frontend should call pages/api/openai/ask
+  const res = await fetch('/api/openai/ask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json?.error || 'OpenAI proxy error');
+  return json;
+}
+
+// Optional direct client call if user supplied an API key
+export async function callOpenAIDirect(apiKey: string, question: string) {
+  const client = new OpenAI({ apiKey });
+  const completion = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: question }],
+    max_tokens: 800,
+  });
+  const comp: unknown = completion;
+  const reply = (comp as { choices?: Array<{ message?: { content?: string } }> } )?.choices?.[0]?.message?.content || '';
+  return { reply, raw: completion };
+}
 export async function askAI(question: string) {
   const resp = await fetch('/api/openai/ask', {
     method: 'POST',
