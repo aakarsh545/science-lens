@@ -30,11 +30,15 @@ const DailyStreakCounter: React.FC<DailyStreakCounterProps> = ({ onMilestone }) 
       if (onMilestone) onMilestone(next);
       // Sync to Supabase if available (best-effort)
       try {
-        const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-        const supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-        if (supabaseUrl && supabaseKey) {
-          const sb = createClient(supabaseUrl, supabaseKey);
-          await sb.from('streaks').upsert([{ value: next, updated_at: new Date().toISOString() }]);
+        // Use client anon supabase if configured in lib/supabase.ts
+        // This avoids exposing a service role key in the browser.
+        // eslint-disable-next-line import/no-unresolved
+        const { supabase } = await import('@/lib/supabase');
+        if (supabase) {
+          await supabase.from('streaks').upsert([{ value: next, updated_at: new Date().toISOString() }]);
+        } else {
+          // Fallback to server endpoint that performs the secure update
+          await fetch('/api/streak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: next }) });
         }
       } catch (e) {
         // ignore

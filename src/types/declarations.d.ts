@@ -1,9 +1,7 @@
 // Additional module declarations for packages used by the app but not installed
-declare module 'react-query' {
-  export const useQuery: any;
-  export const useMutation: any;
-  export default any;
-}
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Declarations for some runtime-only third-party libs used in the project.
+// Prefer installing proper @types packages and removing these shims in CI.
 
 declare module 'react-lottie' {
   const Lottie: any;
@@ -11,8 +9,8 @@ declare module 'react-lottie' {
 }
 
 declare module 'react-toastify' {
+  // The library exports a `toast` function; `useToast` is not part of react-toastify's public API.
   export const toast: any;
-  export function useToast(...args: any[]): any;
   export default any;
 }
 
@@ -26,12 +24,12 @@ declare module '@react-three/fiber' {
   export default any;
 }
 
-// Local API modules referenced by components but not present as TS modules
-declare module '../api/ai-dashboard' { const _default: any; export = _default }
-declare module '../api/feedback' { const _default: any; export = _default }
-declare module '../api/science-explanation' { const _default: any; export = _default }
+// Local placeholder modules used in the app during development
+declare module 'src/api/ai-dashboard' { const _default: any; export = _default }
+declare module 'src/api/feedback' { const _default: any; export = _default }
+declare module 'src/api/science-explanation' { const _default: any; export = _default }
 
-// Next.js shim
+// Next.js shim for API route types — keep these temporary and restore real types later
 declare module 'next' {
   export type NextApiRequest = any;
   export type NextApiResponse = any;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Lightweight shims to make the editor/tsc happy in the dev container environment.
 // These provide broad, permissive types for third-party packages and Deno URLs
 // used in this repo; they remove TS errors produced when type packages aren't installed.
@@ -43,3 +44,18 @@ declare global {
 }
 
 export {};
+
+// Lightweight Next types for API route handlers used in this project.
+declare module 'next' {
+  export interface NextApiRequest {
+    body?: any;
+    headers: Record<string, string | undefined> & { 'content-type'?: string };
+    method?: string | null;
+    socket?: { remoteAddress?: string };
+  }
+  export interface NextApiResponse {
+    status: (code: number) => NextApiResponse;
+    json: (body: any) => NextApiResponse;
+    setHeader: (name: string, value: string) => void;
+  }
+}

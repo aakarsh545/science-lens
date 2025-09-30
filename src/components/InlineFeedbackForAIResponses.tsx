@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@supabase/supabase-js';
 
 interface InlineFeedbackProps {
   messageId?: string;
@@ -13,16 +12,15 @@ const InlineFeedback = ({ messageId }: InlineFeedbackProps) => {
   const sendFeedback = async (helpful: boolean) => {
     setIsHelpful(helpful);
     try {
-  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.VITE_SUPABASE_URL || window.__SUPABASE_URL;
-  const supabaseKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || window.__SUPABASE_SERVICE_ROLE_KEY;
-      if (!supabaseUrl || !supabaseKey) {
-        // Try client-side anon insert via function
-        await fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageId, helpful }) });
+      // Never use SUPABASE_SERVICE_ROLE_KEY on the client. Use a safe server endpoint instead.
+      const resp = await fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageId, helpful }) });
+      if (resp.ok) {
+        toast({ title: 'Thanks for the feedback!' });
       } else {
-        const sb = createClient(supabaseUrl, supabaseKey);
-        await sb.from('feedback').insert([{ message_id: messageId, helpful }]);
+        const body = await resp.json().catch(() => ({}));
+        console.error('Feedback API error', body);
+        toast({ title: 'Feedback failed', variant: 'destructive' });
       }
-      toast({ title: 'Thanks for the feedback!' });
     } catch (e) {
       console.error('Feedback send failed', ((e as unknown) as Error)?.message || e);
       toast({ title: 'Feedback failed', variant: 'destructive' });
