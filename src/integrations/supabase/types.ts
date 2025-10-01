@@ -86,7 +86,7 @@ export type Database = {
       chat_history: {
         Row: {
           content: string
-          conversation_id: string
+          conversation_id: string | null
           created_at: string
           id: string
           message_role: string
@@ -95,7 +95,7 @@ export type Database = {
         }
         Insert: {
           content: string
-          conversation_id?: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           message_role: string
@@ -104,12 +104,50 @@ export type Database = {
         }
         Update: {
           content?: string
-          conversation_id?: string
+          conversation_id?: string | null
           created_at?: string
           id?: string
           message_role?: string
           tokens_used?: number | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_history_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          is_favorite: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -200,6 +238,39 @@ export type Database = {
           created_at?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          animation_style: string | null
+          created_at: string | null
+          difficulty_level: string | null
+          id: string
+          selected_voice: string | null
+          updated_at: string | null
+          user_id: string
+          voice_enabled: boolean | null
+        }
+        Insert: {
+          animation_style?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          selected_voice?: string | null
+          updated_at?: string | null
+          user_id: string
+          voice_enabled?: boolean | null
+        }
+        Update: {
+          animation_style?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          selected_voice?: string | null
+          updated_at?: string | null
+          user_id?: string
+          voice_enabled?: boolean | null
         }
         Relationships: []
       }
