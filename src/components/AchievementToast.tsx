@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { useToast } from 'react-toastify';
+import { useToast } from '@/hooks/use-toast';
 
 const AchievementToast = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const toast = useToast();
+  const { toast } = useToast();
 
   const handleOpen = () => {
     setIsOpen(true);
-    toast.success('You unlocked a new achievement!');
+    toast({
+      title: "Achievement Unlocked!",
+      description: "You unlocked a new achievement!",
+    });
   };
 
   return (

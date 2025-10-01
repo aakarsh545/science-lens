@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useToast } from 'react-toastify';
+import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
 
 const AchievementConfetti = () => {

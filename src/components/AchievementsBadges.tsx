@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { useToast } from 'react-toastify';
+import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
 
 const AchievementBadges = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const toast = useToast();
+  const { toast } = useToast();
 
   const handleUnlock = () => {
     setIsUnlocked(true);
-    toast.success('You unlocked a new achievement!');
+    toast({
+      title: "Achievement Unlocked!",
+      description: "You unlocked a new achievement!",
+    });
     confetti({
       particleCount: 100,
       spread: 70,

@@ -1,11 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, Camera, MessageCircle, Sparkles, Upload, Microscope, Heart } from 'lucide-react';
+import { ArrowRight, Camera, MessageCircle, Sparkles, Upload, Microscope, Heart, LogIn, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { EnhancedAuthModal } from '@/components/EnhancedAuthModal';
+import { DemoMode } from '@/components/DemoMode';
+import { ScienceParticles } from '@/components/ScienceParticles';
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) {
+        navigate('/explore');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+    if (session) {
+      navigate('/explore');
+    }
+  };
+
+  const handleAuthClick = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    navigate('/explore');
+  };
 
   const features = [
     {
@@ -80,9 +119,18 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
+    <div className="min-h-screen bg-gradient-subtle relative">
+      <ScienceParticles />
+      
+      {/* Auth Modal */}
+      <EnhancedAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+      />
+
+      {/* Hero Section with Auth */}
+      <section className="container mx-auto px-4 py-20 text-center relative z-10">
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full text-accent font-medium mb-6">
             <Microscope className="w-4 h-4" />
@@ -102,24 +150,60 @@ const Landing = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              variant="science"
-              onClick={() => navigate('/explore')}
-              className="group"
-            >
-              Start Exploring with Wonder
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button size="lg" variant="outline">
-              See How It Works
-            </Button>
+            {!isAuthenticated ? (
+              <>
+                <Button 
+                  size="lg" 
+                  variant="science"
+                  onClick={() => handleAuthClick('signup')}
+                  className="group"
+                >
+                  <UserPlus className="mr-2 w-4 h-4" />
+                  Sign Up Free
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => handleAuthClick('signin')}
+                >
+                  <LogIn className="mr-2 w-4 h-4" />
+                  Log In
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="ghost"
+                  onClick={() => setShowDemo(true)}
+                >
+                  <Sparkles className="mr-2 w-4 h-4" />
+                  Try Demo
+                </Button>
+              </>
+            ) : (
+              <Button 
+                size="lg" 
+                variant="science"
+                onClick={() => navigate('/explore')}
+                className="group"
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            )}
           </div>
         </div>
       </section>
 
+      {/* Demo Mode Section */}
+      {showDemo && !isAuthenticated && (
+        <section className="container mx-auto px-4 py-12 relative z-10">
+          <DemoMode onSignUpClick={() => handleAuthClick('signup')} />
+        </section>
+      )}
+
       {/* How It Works Section */}
-      <section className="container mx-auto px-4 py-20">
+      {!showDemo && (
+        <section className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">
             How It <span className="text-accent">Works</span>
@@ -147,9 +231,11 @@ const Landing = () => {
           ))}
         </div>
       </section>
+      )}
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-20">
+      {!showDemo && (
+        <section className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">
             Smart Tools for <span className="text-accent">Scientific Discovery</span>
@@ -174,9 +260,11 @@ const Landing = () => {
           ))}
         </div>
       </section>
+      )}
 
       {/* Testimonials Section */}
-      <section className="container mx-auto px-4 py-20">
+      {!showDemo && (
+        <section className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">
             Stories of <span className="text-accent">Scientific Wonder</span>
@@ -208,9 +296,10 @@ const Landing = () => {
           ))}
         </div>
       </section>
+      )}
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
+      <section className="container mx-auto px-4 py-20 text-center relative z-10">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-4xl font-bold mb-4">
             Ready to Start Your <span className="text-accent">Scientific Journey</span>?
@@ -218,15 +307,28 @@ const Landing = () => {
           <p className="text-xl text-muted-foreground mb-8">
             Join thousands of curious minds exploring the science behind everyday wonders.
           </p>
-          <Button 
-            size="lg" 
-            variant="science"
-            onClick={() => navigate('/explore')}
-            className="group"
-          >
-            Begin Exploring Now
-            <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          {!isAuthenticated ? (
+            <Button 
+              size="lg" 
+              variant="science"
+              onClick={() => handleAuthClick('signup')}
+              className="group"
+            >
+              <UserPlus className="mr-2 w-4 h-4" />
+              Start Your Free Journey
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          ) : (
+            <Button 
+              size="lg" 
+              variant="science"
+              onClick={() => navigate('/explore')}
+              className="group"
+            >
+              Begin Exploring Now
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          )}
         </div>
       </section>
     </div>
