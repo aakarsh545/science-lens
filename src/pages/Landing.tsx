@@ -130,8 +130,8 @@ const Landing = () => {
       />
 
       {/* Hero Section with Auth */}
-      <section className="container mx-auto px-4 py-20 text-center relative z-10">
-        <div className="mb-8">
+      <section className="container mx-auto px-4 py-20 min-h-[80vh] flex items-center justify-center text-center relative z-10">
+        <div className="w-full max-w-5xl">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full text-accent font-medium mb-6">
             <Microscope className="w-4 h-4" />
             Your AI-powered science companion
@@ -149,7 +149,7 @@ const Landing = () => {
             science behind everything around you.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {!isAuthenticated ? (
               <>
                 <Button 
@@ -170,23 +170,25 @@ const Landing = () => {
                   <LogIn className="mr-2 w-4 h-4" />
                   Log In
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="ghost"
-                  onClick={() => setShowDemo(true)}
-                >
-                  <Sparkles className="mr-2 w-4 h-4" />
-                  Try Demo
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="ghost"
-                  onClick={() => {
-                    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  How It Works
-                </Button>
+                <div className="flex gap-4">
+                  <Button 
+                    size="lg" 
+                    variant="secondary"
+                    onClick={() => setShowDemo(true)}
+                  >
+                    <Sparkles className="mr-2 w-4 h-4" />
+                    Try Demo
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="secondary"
+                    onClick={() => {
+                      document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  >
+                    How It Works
+                  </Button>
+                </div>
               </>
             ) : (
               <Button 
