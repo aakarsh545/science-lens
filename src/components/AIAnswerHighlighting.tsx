@@ -3,10 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { getScienceExplanation } from '../api/science-explanation';
 
 const ScienceExplanation = () => {
-  const { data, error, isLoading } = useQuery(
-    'science-explanation',
-    getScienceExplanation,
-  );
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['science-explanation'],
+    queryFn: getScienceExplanation,
+  });
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -18,11 +18,11 @@ const ScienceExplanation = () => {
 
   return (
     <div>
-      <h1>{data.title}</h1>
+      <h1>{data?.title}</h1>
       <p>
-        {data.description}
+        {data?.description}
         <span className="highlight">
-          <b>{data.highlightedText}</b>
+          <b>{data?.highlightedText}</b>
         </span>
       </p>
     </div>

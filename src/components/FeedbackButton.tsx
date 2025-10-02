@@ -3,10 +3,12 @@ import { useMutation } from '@tanstack/react-query';
 import { updateFeedback } from '../api/feedback';
 
 const FeedbackButton = () => {
-  const [isHelpful, setIsHelpful] = useState(null);
-  const { mutate, isLoading } = useMutation(updateFeedback);
+  const [isHelpful, setIsHelpful] = useState<boolean | null>(null);
+  const { mutate, isPending } = useMutation({
+    mutationFn: updateFeedback,
+  });
 
-  const handleFeedback = (helpful) => {
+  const handleFeedback = (helpful: boolean) => {
     setIsHelpful(helpful);
     mutate({ helpful });
   };
@@ -15,7 +17,7 @@ const FeedbackButton = () => {
     <div>
       <button onClick={() => handleFeedback(true)}>Helpful</button>
       <button onClick={() => handleFeedback(false)}>Not Helpful</button>
-      {isLoading && <p>Loading...</p>}
+      {isPending && <p>Loading...</p>}
       {isHelpful !== null && <p>Thanks for your feedback!</p>}
     </div>
   );

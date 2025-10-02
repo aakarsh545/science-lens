@@ -4,11 +4,14 @@ import confetti from 'canvas-confetti';
 
 const AchievementConfetti = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const toast = useToast();
+  const { toast } = useToast();
 
   const handleOpen = () => {
     setIsOpen(true);
-    toast.success('You unlocked a new achievement!');
+    toast({
+      title: "Achievement Unlocked!",
+      description: "You unlocked a new achievement!",
+    });
     confetti({
       particleCount: 100,
       spread: 70,
