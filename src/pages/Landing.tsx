@@ -178,6 +178,15 @@ const Landing = () => {
                   <Sparkles className="mr-2 w-4 h-4" />
                   Try Demo
                 </Button>
+                <Button 
+                  size="lg" 
+                  variant="ghost"
+                  onClick={() => {
+                    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  How It Works
+                </Button>
               </>
             ) : (
               <Button 
@@ -297,6 +306,17 @@ const Landing = () => {
         </div>
       </section>
       )}
+
+      {/* How It Works - Technology Section */}
+      <section id="how-it-works" className="container mx-auto px-4 py-20 text-center relative z-10 animate-fade-in">
+        <h2 className="text-4xl font-bold mb-6">
+          How It Works
+        </h2>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          Ask any science question and get AI-powered explanations with diagrams, animations, and voice narration. 
+          ScienceLens uses OpenAI + Supabase to give you real-time, personalized answers.
+        </p>
+      </section>
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20 text-center relative z-10">
