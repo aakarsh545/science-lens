@@ -2,18 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Flame, MessageCircle, Zap, Trophy, Sun, Moon, LogOut } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Flame, MessageCircle, Zap, Trophy, Sun, Moon, LogOut, Star } from 'lucide-react';
 import { ScienceParticles } from '@/components/ScienceParticles';
 import { useTheme } from '@/components/ThemeProvider';
 import { supabase } from '@/lib/supabase';
 import { useConversations } from '@/hooks/useConversations';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseAchievements } from '@/hooks/useSupabaseAchievements';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const { conversations } = useConversations();
+  const { achievements, loading: achievementsLoading } = useSupabaseAchievements();
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState({
     streak: 1,
@@ -167,9 +170,9 @@ const Dashboard = () => {
 
 
         {/* Your Chats Section */}
-        <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
+        <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20 mb-12">
           <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-5 h-5 text-primary" />
+            <MessageCircle className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold">Your Chats</h2>
           </div>
           
@@ -193,6 +196,50 @@ const Dashboard = () => {
               ))}
             </div>
           )}
+        </Card>
+
+        {/* Achievements Section */}
+        <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold">Your Achievements</h2>
+          </div>
+          
+          {achievementsLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Loading achievements...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {achievements.slice(0, 12).map((achievement) => (
+                <div
+                  key={achievement.id}
+                  className={`flex flex-col items-center p-4 rounded-lg border transition-all ${
+                    achievement.unlocked
+                      ? 'bg-primary/10 border-primary/30 shadow-lg'
+                      : 'bg-muted/20 border-border/20 opacity-50'
+                  }`}
+                >
+                  <div className="text-4xl mb-2">{achievement.icon}</div>
+                  <div className="text-xs text-center font-medium truncate w-full">
+                    {achievement.title}
+                  </div>
+                  {achievement.unlocked && (
+                    <Badge variant="secondary" className="mt-2 text-xs">
+                      <Star className="w-3 h-3 mr-1" />
+                      Unlocked
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="mt-6 text-center">
+            <Button variant="outline" onClick={() => navigate('/profile')}>
+              View All Achievements
+            </Button>
+          </div>
         </Card>
       </div>
     </div>

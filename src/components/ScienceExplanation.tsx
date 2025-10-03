@@ -194,9 +194,9 @@ export function ScienceExplanation({ content, category = 'general' }: ScienceExp
 
             {sections[currentSection].content && (
               <div className="prose prose-sm max-w-none dark:prose-invert">
-                <div className="whitespace-pre-wrap leading-relaxed space-y-4">
+                <div className="whitespace-pre-wrap leading-relaxed space-y-6">
                   {sections[currentSection].content.split('\n\n').map((paragraph, idx) => (
-                    <p key={idx} className="mb-4">{paragraph}</p>
+                    <p key={idx} className="mb-6 text-lg leading-loose">{paragraph}</p>
                   ))}
                 </div>
               </div>

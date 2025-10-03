@@ -21,12 +21,12 @@ All colors MUST be HSL.
     --popover-foreground: 225 25% 15%;
 
     /* Primary - Vibrant Science Blue */
-    --primary: 217 91% 55%;
+    --primary: 210 100% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 91% 70%;
+    --primary-glow: 210 100% 70%;
 
     /* Secondary - Cheerful Purple */
-    --secondary: 270 70% 60%;
+    --secondary: 280 80% 65%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted tones */
@@ -34,8 +34,8 @@ All colors MUST be HSL.
     --muted-foreground: 225 15% 55%;
 
     /* Accent - Science Green */
-    --accent: 142 76% 55%;
-    --accent-foreground: 225 25% 15%;
+    --accent: 150 85% 50%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive */
     --destructive: 0 84% 60%;
