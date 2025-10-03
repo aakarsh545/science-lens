@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Landing from "./pages/Landing";
+import Dashboard from "./pages/Dashboard";
+import TopicsBrowser from "./pages/TopicsBrowser";
 import ScienceLens from "./pages/ScienceLens";
 import Pricing from "./pages/Pricing";
 import ApiTest from "./pages/ApiTest";
@@ -22,6 +24,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/topics" element={<TopicsBrowser />} />
             <Route path="/explore" element={<ScienceLens />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/api-test" element={<ApiTest />} />

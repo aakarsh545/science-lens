@@ -43,7 +43,7 @@ const Landing = () => {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    navigate('/explore');
+    navigate('/dashboard');
   };
 
   const features = [

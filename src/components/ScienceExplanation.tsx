@@ -192,7 +192,15 @@ export function ScienceExplanation({ content, category = 'general' }: ScienceExp
 
             {sections[currentSection].diagram && <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-6"><AnimatedDiagram {...sections[currentSection].diagram!} /></div>}
 
-            {sections[currentSection].content && <div className="prose prose-sm max-w-none dark:prose-invert"><div className="whitespace-pre-wrap leading-relaxed">{sections[currentSection].content}</div></div>}
+            {sections[currentSection].content && (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <div className="whitespace-pre-wrap leading-relaxed space-y-4">
+                  {sections[currentSection].content.split('\n\n').map((paragraph, idx) => (
+                    <p key={idx} className="mb-4">{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {sections[currentSection].keyPoints && (
               <div className="space-y-3"><h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Key Points</h4><div className="space-y-2">{sections[currentSection].keyPoints!.map((p, idx) => (<motion.div key={idx} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }} className="flex items-start space-x-3 p-3 bg-muted/50 rounded-lg"><div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs text-primary-foreground font-medium">{idx + 1}</span></div><p className="text-sm">{p}</p></motion.div>))}</div></div>
