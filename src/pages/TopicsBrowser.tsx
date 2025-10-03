@@ -128,11 +128,11 @@ const TopicsBrowser = () => {
         <div className="flex justify-between items-center mb-8">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(-1)}
             className="gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back
           </Button>
           
           <Button

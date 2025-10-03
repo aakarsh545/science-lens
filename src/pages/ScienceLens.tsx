@@ -272,7 +272,7 @@ export default function ScienceLens() {
       // Immutable update: create new conversation with assistant message
       const finalConversation = {
         ...updatedConversation,
-        messages: [...updatedConversation.messages, assistantMessage]
+        messages: [...updatedConversation.messages, assistantMessage].filter(m => m && m.type) // Filter out any invalid messages
       };
       setCurrentConversation(finalConversation);
       console.log('handleSendMessage: Updated conversation with assistant message, total messages:', finalConversation.messages.length);
@@ -399,118 +399,25 @@ export default function ScienceLens() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            
-            <motion.div 
-              className="flex items-center space-x-2"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="p-2 bg-gradient-cosmic rounded-lg">
-                <Atom className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-xl font-bold bg-gradient-cosmic bg-clip-text text-transparent">
-                ScienceLens
-              </h1>
-            </motion.div>
-          </div>
+          <motion.div 
+            className="flex items-center space-x-2"
+            whileHover={{ scale: 1.05 }}
+          >
+            <div className="p-2 bg-gradient-to-r from-primary to-secondary rounded-lg shadow-lg">
+              <Atom className="h-6 w-6 text-white" />
+            </div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              ScienceLens
+            </h1>
+          </motion.div>
 
           <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentView('profile')}
-              className="hidden sm:flex"
-            >
-              <User className="h-5 w-5" />
-            </Button>
-            <CreditsDisplay compact />
             <ThemeToggle />
           </div>
         </div>
       </header>
 
       <div className="flex h-[calc(100vh-4rem)]">
-        {/* Sidebar */}
-        <AnimatePresence>
-          {(sidebarOpen || window.innerWidth >= 1024) && (
-            <motion.aside
-              initial={{ x: -300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="w-80 border-r bg-card p-4 overflow-y-auto lg:relative absolute inset-y-0 left-0 z-30 lg:translate-x-0"
-            >
-              <div className="space-y-4">
-                {/* Credits Display */}
-                <CreditsDisplay />
-
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="history" className="flex items-center space-x-2">
-                      <History className="h-4 w-4" />
-                      <span>History</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="achievements" className="flex items-center space-x-2">
-                      <Award className="h-4 w-4" />
-                      <span>Badges</span>
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="history" className="mt-4 h-[calc(100%-3rem)]">
-                    <DiscoveryHistory
-                      conversations={conversations}
-                      onSelectConversation={handleSelectConversation}
-                      onDeleteConversation={handleDeleteConversation}
-                      onToggleFavorite={handleToggleFavorite}
-                      favorites={favorites}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="achievements" className="mt-4 h-[calc(100%-3rem)]">
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <Button
-                          variant="outline"
-                          onClick={() => setCurrentView('profile')}
-                          className="w-full"
-                        >
-                          <User className="h-4 w-4 mr-2" />
-                          View Full Profile
-                        </Button>
-                      </div>
-                      
-                      <Card className="h-[calc(100%-4rem)]">
-                        <CardHeader>
-                          <CardTitle className="flex items-center space-x-2">
-                            <Award className="h-5 w-5" />
-                            <span>Recent Achievements</span>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-center text-sm text-muted-foreground space-y-2">
-                            <p>Start asking questions to unlock achievements!</p>
-                            <p className="text-xs">🏆 100+ badges across 8 science categories</p>
-                            <p className="text-xs">💎 Earn bonus credits for unlocking achievements</p>
-                            <p className="text-xs">🔥 Build streaks and become a science master!</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </motion.aside>
-          )}
-        </AnimatePresence>
-
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 py-8">

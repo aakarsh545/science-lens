@@ -165,15 +165,6 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        <div className="text-center mb-8">
-          <Button 
-            onClick={() => navigate('/explore')}
-            className="bg-gradient-to-r from-primary to-primary/80"
-          >
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Choose Topic & Start
-          </Button>
-        </div>
 
         {/* Your Chats Section */}
         <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
