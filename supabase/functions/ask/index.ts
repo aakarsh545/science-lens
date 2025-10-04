@@ -15,8 +15,10 @@ serve(async (req) => {
 
   try {
     const { prompt, userId } = await req.json();
+    console.log('Edge function invoked with userId:', userId);
     
     if (!prompt) {
+      console.error('No prompt provided');
       return new Response(JSON.stringify({ error: 'Prompt is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -39,7 +41,7 @@ serve(async (req) => {
     }
 
     // Call Lovable AI (Google Gemini)
-    console.log('Calling Lovable AI with prompt:', prompt);
+    console.log('Calling Lovable AI with model: google/gemini-2.5-flash');
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -59,9 +61,26 @@ serve(async (req) => {
       }),
     });
 
+    console.log('Lovable AI response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
+      console.error('Lovable AI error status:', response.status, 'data:', errorData);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: 'AI credits depleted. Please add credits to continue.' }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       return new Response(JSON.stringify({ error: 'Failed to get AI response' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

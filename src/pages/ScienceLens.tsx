@@ -110,26 +110,45 @@ export default function ScienceLens() {
   const generateAIResponse = async (question: string, hasImage: boolean, category: string): Promise<string> => {
     try {
       // Call the Supabase Edge Function
-      console.log('Calling /api/ask endpoint with question:', question.slice(0, 100));
+      console.log('Calling ask edge function with question:', question.slice(0, 100));
+      
+      const { data: { user } } = await supabase.auth.getUser();
       
       const { data, error } = await supabase.functions.invoke('ask', {
-        body: { prompt: question }
+        body: { 
+          prompt: question,
+          userId: user?.id 
+        }
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
-
-      if (data?.response) {
-        console.log('Received AI response from backend');
+        console.error('Edge function invoke error:', error);
+        toast({
+          title: "AI Connection Error",
+          description: "Failed to connect to AI service. Using fallback response.",
+          variant: "destructive"
+        });
+        // Fall back to mock response
+      } else if (data?.response) {
+        console.log('Successfully received AI response from backend');
         return data.response;
       } else {
-        throw new Error('No response received from AI service');
+        console.error('No response data received:', data);
+        toast({
+          title: "No Response",
+          description: "AI service returned no data. Using fallback response.",
+          variant: "destructive"
+        });
+        // Fall back to mock response
       }
     } catch (error) {
-      console.error('Backend AI service error:', error);
-      // Fall back to enhanced mock response
+      console.error('Unexpected error calling AI:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Using fallback response.",
+        variant: "destructive"
+      });
+      // Fall back to mock response
     }
     
     // Enhanced mock response as fallback
