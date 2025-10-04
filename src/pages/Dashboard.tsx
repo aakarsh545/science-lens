@@ -170,7 +170,7 @@ const Dashboard = () => {
 
 
         {/* Your Chats Section */}
-        <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20 mb-12">
+        <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <MessageCircle className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold">Your Chats</h2>
@@ -198,7 +198,59 @@ const Dashboard = () => {
           )}
         </Card>
 
-        {/* Achievements Section */}
+        {/* Achievements Bar */}
+        <Card className="p-6 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 backdrop-blur-sm border-primary/30 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-bold">Achievement Progress</h2>
+            </div>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              <Star className="w-4 h-4 mr-2" />
+              {achievements.filter(a => a.unlocked).reduce((acc, a) => acc + (a.bonusCredits || 1), 0)} Credits Earned
+            </Badge>
+          </div>
+          
+          {achievementsLoading ? (
+            <div className="text-center py-4 text-muted-foreground">
+              <p>Loading achievements...</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="flex-1 bg-muted rounded-full h-4 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-primary via-secondary to-accent h-full transition-all duration-500"
+                    style={{ 
+                      width: `${(achievements.filter(a => a.unlocked).length / achievements.length) * 100}%` 
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-medium whitespace-nowrap">
+                  {achievements.filter(a => a.unlocked).length} / {achievements.length}
+                </span>
+              </div>
+              
+              <div className="flex gap-2 flex-wrap">
+                {achievements.slice(0, 8).map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                      achievement.unlocked
+                        ? 'bg-primary/20 border-primary/40 shadow-md'
+                        : 'bg-muted/20 border-border/20 opacity-40'
+                    }`}
+                  >
+                    <span className="text-2xl">{achievement.icon}</span>
+                    <span className="text-xs font-medium">{achievement.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Your Achievements Full Section */}
         <Card className="p-6 bg-card/50 backdrop-blur-sm border-primary/20">
           <div className="flex items-center gap-2 mb-4">
             <Trophy className="w-5 h-5 text-primary" />

@@ -31,6 +31,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useConversations } from '@/hooks/useConversations';
 import type { Message, Conversation, Achievement, UserProfile } from '@/types';
 
 // Categories for question classification (simplified)
@@ -69,10 +70,6 @@ export default function ScienceLens() {
   const [celebrationAchievement, setCelebrationAchievement] = useState<Achievement | null>(null);
   const [showApiKeyPrompt, setShowApiKeyPrompt] = useState(false);
   const [hasShownApiPrompt, setHasShownApiPrompt] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [hasAskedFirstQuestion, setHasAskedFirstQuestion] = useState(false);
-
   // Persistent storage
   const [conversations, setConversations] = useLocalStorage<Conversation[]>('science-lens-conversations', []);
   const [favorites, setFavorites] = useLocalStorage<string[]>('science-lens-favorites', []);
@@ -81,30 +78,7 @@ export default function ScienceLens() {
   const { credits, hasCredits, useCredit: consumeCredit } = useCredits();
   const { newAchievement, recordQuestion, dismissNewAchievement } = useAchievements();
   const { toast } = useToast();
-
-  // Check authentication status on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      }
-    };
-    
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      if (session) {
-        setShowAuthModal(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { saveConversation } = useConversations();
 
   // AI response generator using Supabase Edge Function
   const generateAIResponse = async (question: string, hasImage: boolean, category: string): Promise<string> => {
@@ -267,12 +241,6 @@ export default function ScienceLens() {
       // Record question for achievements
       recordQuestion(category, content, !!image);
 
-      // Show auth modal after first question if not authenticated
-      if (!hasAskedFirstQuestion && !isAuthenticated) {
-        setHasAskedFirstQuestion(true);
-        setShowAuthModal(true);
-      }
-
       setIsLoading(true);
 
       // Generate AI response with category context
@@ -301,6 +269,9 @@ export default function ScienceLens() {
       updatedConversations.unshift(finalConversation);
       setConversations(updatedConversations);
       console.log('handleSendMessage: Updated conversations list, total conversations:', updatedConversations.length);
+
+      // Save conversation to Supabase (if authenticated) and localStorage
+      await saveConversation(finalConversation);
 
     } catch (error) {
       console.error('handleSendMessage: Error occurred:', error);
@@ -533,19 +504,6 @@ export default function ScienceLens() {
           </div>
         </main>
       </div>
-
-      {/* Authentication Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setShowAuthModal(false);
-          toast({
-            title: "Welcome to ScienceLens!",
-            description: "Your learning journey is now being tracked.",
-          });
-        }}
-      />
 
       {/* API Key Prompt - Only show conditionally */}
       {showApiKeyPrompt && (

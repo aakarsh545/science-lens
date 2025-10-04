@@ -190,7 +190,7 @@ export function ScienceExplanation({ content, category = 'general' }: ScienceExp
               )}
             </div>
 
-            {sections[currentSection].diagram && <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-6"><AnimatedDiagram {...sections[currentSection].diagram!} /></div>}
+            {/* Diagrams removed - showing text explanations only */}
 
             {sections[currentSection].content && (
               <div className="prose prose-sm max-w-none dark:prose-invert">
