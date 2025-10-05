@@ -14,8 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, userId } = await req.json();
-    console.log('Edge function invoked with userId:', userId);
+    const { prompt } = await req.json();
     
     if (!prompt) {
       console.error('No prompt provided');
@@ -27,8 +26,30 @@ serve(async (req) => {
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+    // Check if user is authenticated (optional for public chat)
+    const authHeader = req.headers.get('Authorization');
+    let authenticatedUserId: string | null = null;
+    
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+        
+        if (!authError && user) {
+          authenticatedUserId = user.id;
+          console.log('Authenticated user:', authenticatedUserId);
+        }
+      } catch (e) {
+        console.log('Auth check failed, treating as anonymous:', e);
+      }
+    }
+
+    if (!authenticatedUserId) {
+      console.log('Anonymous user - will skip database logging for privacy');
+    }
 
     // Get Lovable AI API key
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -90,24 +111,25 @@ serve(async (req) => {
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    // Log to database
-    console.log('Logging to database:', { prompt, response: aiResponse });
-    const { error: logError } = await supabase
-      .from('ai_logs')
-      .insert({
-        prompt: prompt,
-        response: aiResponse,
-        user_id: userId || null
-      });
+    // Only log to database if user is authenticated (for privacy and security)
+    if (authenticatedUserId) {
+      console.log('Logging to database for authenticated user');
+      const { error: logError } = await supabaseClient
+        .from('ai_logs')
+        .insert({
+          prompt: prompt,
+          response: aiResponse,
+          user_id: authenticatedUserId
+        });
 
-    if (logError) {
-      console.error('Database logging error:', logError);
-      // Continue anyway - don't fail the request just because logging failed
+      if (logError) {
+        console.error('Database logging error:', logError);
+        // Continue anyway - don't fail the request just because logging failed
+      }
     }
 
     return new Response(JSON.stringify({ 
-      response: aiResponse,
-      logged: !logError 
+      response: aiResponse
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

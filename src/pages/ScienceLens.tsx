@@ -80,18 +80,15 @@ export default function ScienceLens() {
   const { toast } = useToast();
   const { saveConversation } = useConversations();
 
-  // AI response generator using Supabase Edge Function
   const generateAIResponse = async (question: string, hasImage: boolean, category: string): Promise<string> => {
     try {
       // Call the Supabase Edge Function
+      // Note: Auth header is automatically included by Supabase client if user is logged in
       console.log('Calling ask edge function with question:', question.slice(0, 100));
-      
-      const { data: { user } } = await supabase.auth.getUser();
       
       const { data, error } = await supabase.functions.invoke('ask', {
         body: { 
-          prompt: question,
-          userId: user?.id 
+          prompt: question
         }
       });
 
