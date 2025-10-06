@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, test = false, apiKey: clientApiKey } = await req.json();
+    const { prompt } = await req.json();
     
     if (!prompt) {
       console.error('No prompt provided');
@@ -51,8 +51,8 @@ serve(async (req) => {
       console.log('Anonymous user - will skip database logging for privacy');
     }
 
-    // Get OpenAI API key (from Supabase secret or client for testing)
-    const openaiApiKey = test && clientApiKey ? clientApiKey : Deno.env.get('OPENAI_API_KEY');
+    // Get OpenAI API key from Supabase secret
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       console.error('OpenAI API key not found');
       return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
