@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json();
+    const { prompt, test = false, apiKey: clientApiKey } = await req.json();
     
     if (!prompt) {
       console.error('No prompt provided');
@@ -51,26 +51,26 @@ serve(async (req) => {
       console.log('Anonymous user - will skip database logging for privacy');
     }
 
-    // Get Lovable AI API key
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      console.error('Lovable AI API key not found');
-      return new Response(JSON.stringify({ error: 'Lovable AI API key not configured' }), {
+    // Get OpenAI API key (from Supabase secret or client for testing)
+    const openaiApiKey = test && clientApiKey ? clientApiKey : Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      console.error('OpenAI API key not found');
+      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Call Lovable AI (Google Gemini)
-    console.log('Calling Lovable AI with model: google/gemini-2.5-flash');
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call OpenAI API
+    console.log('Calling OpenAI with model: gpt-4o-mini');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
@@ -98,14 +98,15 @@ Remember: You're not just answering questions – you're making science exciting
           { role: 'user', content: prompt }
         ],
         max_tokens: 1000,
+        temperature: 0.7,
       }),
     });
 
-    console.log('Lovable AI response status:', response.status);
+    console.log('OpenAI response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Lovable AI error status:', response.status, 'data:', errorData);
+      console.error('OpenAI error status:', response.status, 'data:', errorData);
       
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), {
@@ -114,14 +115,14 @@ Remember: You're not just answering questions – you're making science exciting
         });
       }
       
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: 'AI credits depleted. Please add credits to continue.' }), {
-          status: 402,
+      if (response.status === 401) {
+        return new Response(JSON.stringify({ error: 'Invalid OpenAI API key. Please check your key.' }), {
+          status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       
-      return new Response(JSON.stringify({ error: 'Failed to get AI response' }), {
+      return new Response(JSON.stringify({ error: 'Failed to get AI response from OpenAI' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

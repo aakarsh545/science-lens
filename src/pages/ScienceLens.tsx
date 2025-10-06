@@ -7,6 +7,7 @@ import { ChatInterface } from '@/components/ChatInterface';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ScienceParticles } from '@/components/ScienceParticles';
+import { OpenAISetup } from '@/components/OpenAISetup';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useChats, type ChatMessage } from '@/hooks/useChats';
@@ -17,7 +18,16 @@ export default function ScienceLens() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState('');
+  const [setupComplete, setSetupComplete] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if OpenAI key is already configured
+    const storedKey = localStorage.getItem('openai_api_key');
+    if (storedKey) {
+      setSetupComplete(true);
+    }
+  }, []);
   
   const {
     chats,
@@ -133,6 +143,11 @@ export default function ScienceLens() {
   };
 
   const messages = currentChat ? convertMessages(currentChat.messages) : [];
+
+  // Show setup screen if not configured
+  if (!setupComplete) {
+    return <OpenAISetup onComplete={() => setSetupComplete(true)} />;
+  }
 
   return (
     <div className="h-screen w-full flex bg-background overflow-hidden">
