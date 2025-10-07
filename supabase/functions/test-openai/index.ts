@@ -13,31 +13,32 @@ serve(async (req) => {
   }
 
   try {
-    // Get Lovable AI API key
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      console.error('Lovable AI API key not found');
+    // Get OpenAI API key from Supabase secrets
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      console.error('OpenAI API key not found');
       return new Response(JSON.stringify({ 
-        error: 'Lovable AI API key not configured',
-        message: 'Please enable Lovable AI in your project'
+        error: 'OpenAI API key not configured',
+        message: 'Please add OPENAI_API_KEY to Supabase secrets',
+        success: false
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Test Lovable AI API call
-    console.log('Testing Lovable AI (Google Gemini) connection...');
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Test OpenAI API call
+    console.log('Testing OpenAI connection...');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
-          { role: 'user', content: 'Say "Hello from Gemini!" and nothing else.' }
+          { role: 'user', content: 'Say "Hello from OpenAI!" and nothing else.' }
         ],
         max_tokens: 10,
       }),
@@ -45,12 +46,15 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Lovable AI API error:', errorData);
+      console.error('OpenAI API error:', response.status, errorData);
+      
       return new Response(JSON.stringify({ 
-        error: 'Lovable AI API call failed',
-        details: errorData 
+        error: 'OpenAI API call failed',
+        details: errorData,
+        status: response.status,
+        success: false
       }), {
-        status: 500,
+        status: response.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -58,21 +62,23 @@ serve(async (req) => {
     const data = await response.json();
     const message = data.choices[0].message.content;
 
-    console.log('Lovable AI test successful:', message);
+    console.log('OpenAI test successful:', message);
     return new Response(JSON.stringify({ 
       message: message,
-      status: 'Lovable AI (Google Gemini) connection successful',
-      model: 'google/gemini-2.5-flash',
-      timestamp: new Date().toISOString()
+      status: 'OpenAI connection successful',
+      model: 'gpt-4o-mini',
+      timestamp: new Date().toISOString(),
+      success: true
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in test-lovable-ai function:', error);
+    console.error('Error in test-openai function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      status: 'Lovable AI connection failed'
+      status: 'OpenAI connection failed',
+      success: false
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
